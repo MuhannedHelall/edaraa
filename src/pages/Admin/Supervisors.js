@@ -2,21 +2,6 @@ import React, { useState, useEffect } from "react";
 import SupervisorTableItem from "./SupervisorTableItem";
 
 function Supervisors() {
-  const form = document.getElementById("addSupervisor");
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    fetch("http://localhost:8000/addUser", {
-      method: "POST",
-      body: JSON.stringify(Object.fromEntries(formData.entries())),
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((response) => response.json())
-      .then((data) => console.log(data))
-      .catch((error) => console.error(error));
-  });
-
-  /////////////////////////////////////////////////////
   const [users, setUsers] = useState([]);
 
   const getSupervisors = async () => {
@@ -98,7 +83,7 @@ function Supervisors() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form id="addSupervisor" action="">
+            <form method="POST" action="http://localhost:8000/addUser">
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Add Supervisor
@@ -233,7 +218,7 @@ function Supervisors() {
                       aria-expanded="false"
                       aria-controls="collapseWidthExample"
                     >
-                      Toggle width collapse
+                      Change Password
                     </button>
                   </div>
                   <input
