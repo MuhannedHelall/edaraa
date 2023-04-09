@@ -1,13 +1,14 @@
 import React, { useState } from "react";
+import Cookies from "js-cookie";
 import WarehouseNavItem from "./WarehouseNavItem";
 import { Link, Outlet } from "react-router-dom";
-import userData from "../data/userData";
 import warehouseTableData from "../data/warehouseTableData";
-import superWarehouseData from "../data/superWarehouseData";
 import "../assets/styles/MainPage.css";
 
 function MainPage() {
+  // eslint-disable-next-line
   const [items, setItems] = useState(warehouseTableData);
+
   const Admin = () => {
     return (
       <>
@@ -55,7 +56,7 @@ function MainPage() {
     return (
       <li className="mb-1">
         <Link
-          to={"/warehouses/" + superWarehouseData.id}
+          to={"/warehouses/" + 1}
           className="btn btn-toggle d-inline-flex align-items-center rounded border-0"
         >
           <i className="bi bi-bag-heart me-2 fs-5"></i>
@@ -64,7 +65,49 @@ function MainPage() {
       </li>
     );
   };
+  const deleteUserCookies = () => {
+    Cookies.remove("id");
+    Cookies.remove("name");
+    Cookies.remove("email");
+    Cookies.remove("isAdmin");
+    Cookies.remove("isActive");
+    Cookies.remove("phone");
+    Cookies.remove("token");
+    window.location.replace("/");
+  };
+  const errMsgAlert = (message) => {
+    const alertPlaceholder = document.getElementById("liveAlertPlaceholder");
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = [
+      `<div class="col alert alert-danger alert-dismissible" role="alert">`,
+      `   <div>${message}</div>`,
+      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+      "</div>",
+    ].join("");
 
+    alertPlaceholder.append(wrapper);
+  };
+  const edituserModal = (event) => {
+    event.preventDefault();
+    fetch("http://localhost:8000/updateSupervisor/" + Cookies.get("id"), {
+      method: "POST",
+      body: JSON.stringify({
+        name: event.target[1].value,
+        email: event.target[2].value,
+        password: event.target[3].value,
+        phone: event.target[4].value,
+      }),
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        data.errors
+          ? data.errors.map((err) => errMsgAlert(err))
+          : window.location.reload();
+      })
+      .catch((error) => console.error(error));
+  };
   return (
     <>
       <nav className="navbar navbar-dark bg-dark navbar-expand-lg border-bottom sticky-top">
@@ -118,7 +161,7 @@ function MainPage() {
                   Dashboard
                 </Link>
               </li>
-              {userData.type === "Admin" ? Admin() : Supervisor()}
+              {Cookies.get("isAdmin") ? Admin() : Supervisor()}
               <li className="mb-1">
                 <Link
                   to={"/Requests"}
@@ -142,24 +185,25 @@ function MainPage() {
                 <div className="collapse" id="account-collapse">
                   <ul className="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                     <li>
-                      <Link
-                        to={""}
-                        className="link-dark d-inline-flex text-decoration-none rounded fs-6"
+                      <button
+                        type="button"
+                        className="btn link-dark d-inline-flex text-decoration-none rounded fs-6"
                         data-bs-toggle="modal"
                         data-bs-target="#editProfile"
                       >
                         <i className="bi bi-person-fill-gear me-2"></i>
                         Edit Profile
-                      </Link>
+                      </button>
                     </li>
                     <li>
-                      <Link
-                        to={"/"}
-                        className="link-dark d-inline-flex text-decoration-none rounded fs-6"
+                      <button
+                        type="button"
+                        className="btn link-dark d-inline-flex text-decoration-none rounded fs-6"
+                        onClick={deleteUserCookies}
                       >
                         <i className="bi bi-box-arrow-left me-2"></i>
                         Sign out
-                      </Link>
+                      </button>
                     </li>
                   </ul>
                 </div>
@@ -169,6 +213,7 @@ function MainPage() {
 
           {/* <!-- Content --> */}
           <div className="col-10 bg-white px-5">
+            <div id="liveAlertPlaceholder" className="mt-3"></div>
             <Outlet />
           </div>
         </div>
@@ -185,19 +230,19 @@ function MainPage() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="exampleModalLabel">
-                {userData.type === "Admin" ? "Edit Admin" : "Edit Supervisor"}
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body">
-              <form>
+            <form onSubmit={(e) => edituserModal(e)}>
+              <div className="modal-header">
+                <h5 className="modal-title" id="exampleModalLabel">
+                  {Cookies.get("isAdmin") ? "Edit Admin" : "Edit Supervisor"}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
                 <div className="mb-3">
                   <label htmlFor="editAdminName" className="form-label">
                     Name
@@ -206,6 +251,7 @@ function MainPage() {
                     type="text"
                     className="form-control"
                     id="editAdminName"
+                    name="name"
                   />
                 </div>
                 <div className="mb-3">
@@ -239,20 +285,20 @@ function MainPage() {
                     id="editAdminPhoneNumber"
                   />
                 </div>
-              </form>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                Close
-              </button>
-              <button type="submit" className="btn btn-dark px-4">
-                Save
-              </button>
-            </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Close
+                </button>
+                <button type="submit" className="btn btn-dark px-4">
+                  Save
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

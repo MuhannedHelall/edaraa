@@ -4,9 +4,10 @@ import userData from "./userData";
 
 let superWarehouseData = {};
 warehouseTableData.map((warehouse) => {
-  if (warehouse.supervisorId == userData.id) {
+  if (warehouse.supervisorId === userData.id) {
     superWarehouseData = warehouse;
   }
+  return 0;
 });
 
 const superDashboardData = {

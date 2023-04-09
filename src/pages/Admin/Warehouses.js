@@ -3,6 +3,7 @@ import WarehouseTableItem from "./WarehouseTableItem";
 import warehouseTableData from "../../data/warehouseTableData";
 
 function Warehouses() {
+  // eslint-disable-next-line
   const [items, setItems] = useState(warehouseTableData);
   return (
     <>

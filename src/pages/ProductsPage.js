@@ -7,17 +7,21 @@ import userData from "../data/userData";
 
 function ProductsPage() {
   const params = useParams();
+  // eslint-disable-next-line
   const [warehouses, setWarehouses] = useState(warehouseTableData);
   let superWarehouseData = {};
   warehouses.map((warehouse) => {
-    if (params.id == warehouse.id) superWarehouseData = warehouse;
+    if (params.id === warehouse.id) superWarehouseData = warehouse;
+    return 0;
   });
+  // eslint-disable-next-line
   const [products, setProducts] = useState(superWarehouseData.products);
 
   const Admin = () => {
     let flag = 0;
     warehouses.map((warehouse) => {
-      if (params.id == warehouse.id) flag = 1;
+      if (params.id === warehouse.id) flag = 1;
+      return 0;
     });
 
     if (!flag) {
@@ -48,10 +52,10 @@ function ProductsPage() {
       document.getElementById("addStock").value = numOfStocks;
     };
 
-    if (params.id != superWarehouseData.id) {
+    if (params.id !== superWarehouseData.id) {
       window.location.replace("http://localhost:3000/Dashboard");
     }
-
+    // eslint-disable-next-line
     const [products, setProducts] = useState(superWarehouseData.products);
     return products.map((product) => {
       return (

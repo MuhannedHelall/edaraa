@@ -1,11 +1,22 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
-import adminDashboardData from "../data/adminDashboardData";
-import superDashboardData from "../data/superDashboardData";
 import superWarehouseData from "../data/superWarehouseData";
-import userData from "../data/userData";
 
 function Dashboard() {
+  // console.log(Cookies.get());
+  const [adminData, setAdminData] = useState([]);
+  const [superData, setSuperData] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/DashboardDataForAdmin")
+      .then((response) => response.json())
+      .then((data) =>
+        Cookies.get("isAdmin") ? setAdminData(data) : setSuperData(data)
+      )
+      .catch((error) => console.error(error));
+  }, []);
+
   const Admin = () => {
     return (
       <>
@@ -14,7 +25,7 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-houses-fill" style={{ fontSize: "80pt" }}></i>
               <p>Warehouses</p>
-              <p>{adminDashboardData.numOfWarhouses}</p>
+              <p>{adminData.warehouse}</p>
             </div>
           </Link>
         </div>
@@ -23,7 +34,7 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-people" style={{ fontSize: "80pt" }}></i>
               <p>Supervisors</p>
-              <p>{adminDashboardData.numOfSupervisors}</p>
+              <p>{adminData.supervisors}</p>
             </div>
           </Link>
         </div>
@@ -32,7 +43,7 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-bell" style={{ fontSize: "80pt" }}></i>
               <p>Requests</p>
-              <p>{adminDashboardData.numOfRequests}</p>
+              <p>{adminData.requests}</p>
             </div>
           </Link>
         </div>
@@ -50,7 +61,7 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-bag-heart" style={{ fontSize: "80pt" }}></i>
               <p>Products</p>
-              <p>{superDashboardData.numOfProducts}</p>
+              <p>{superData.numOfProducts}</p>
             </div>
           </Link>
         </div>
@@ -59,13 +70,14 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-bell" style={{ fontSize: "80pt" }}></i>
               <p>Requests</p>
-              <p>{superDashboardData.numOfRequests}</p>
+              <p>{superData.numOfRequests}</p>
             </div>
           </Link>
         </div>
       </>
     );
   };
+
   return (
     <>
       <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -77,7 +89,7 @@ function Dashboard() {
 
       <section className="container-fluid">
         <div className="row" style={{ fontSize: "35pt" }}>
-          {userData.type === "Admin" ? Admin() : Supervisor()}
+          {Cookies.get("isAdmin") ? Admin() : Supervisor()}
         </div>
       </section>
     </>
