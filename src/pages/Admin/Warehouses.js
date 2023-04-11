@@ -18,7 +18,7 @@ function Warehouses() {
   useEffect(() => {
     fetch("http://localhost:8000/getInActiveSupervisors")
       .then((response) => response.json())
-      .then((data) => setSupervisors(data.supervisor));
+      .then((data) => setSupervisors(data));
   }, []);
 
   const addWarehouse = (event) => {
