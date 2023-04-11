@@ -30,7 +30,7 @@ function Home() {
     })
       .then((response) => response.json())
       .then((data) => {
-        data.user ? saveCookie(data.user) : errMsgAlert(data.message);
+        data.user ? saveCookie(data.user) : errMsgAlert(data.error);
       })
       .catch((error) => console.error(error));
   };

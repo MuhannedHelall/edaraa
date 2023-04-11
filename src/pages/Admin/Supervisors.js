@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import SupervisorTableItem from "./SupervisorTableItem";
+import ErrorHandler from "./../../components/ErrorHandler";
 
 function Supervisors() {
+  if (Cookies.get("isAdmin").toLowerCase() !== "true")
+    window.location.replace("/NotFound");
+
   const [users, setUsers] = useState([]);
   useEffect(() => {
     fetch("http://localhost:8000/getAllSupervisors")
       .then((response) => response.json())
       .then((data) => setUsers(data));
   }, []);
-  
-  const addSupervisorToDB = (event) => {
+
+  const addSupervisor = (event) => {
     event.preventDefault();
     fetch("http://localhost:8000/addSupervisor", {
       method: "POST",
@@ -24,28 +29,32 @@ function Supervisors() {
       .then((response) => response.json())
       .then((data) => {
         data.errors
-          ? data.errors.map((err) => errMsgAlert(err))
+          ? data.errors.map((err) => ErrorHandler(err))
           : window.location.reload();
       })
       .catch((error) => console.error(error));
   };
-  const updateSupervisorInDB = (event) => {
-    event.preventDefault();
-    fetch("http://localhost:8000/updateSupervisor/" + event.target[1].value, {
-      method: "POST",
-      body: JSON.stringify({
-        name: event.target[2].value,
-        email: event.target[3].value,
-        phone: event.target[4].value,
-        isActive: event.target[5].value,
-        password: event.target[7].value,
-      }),
-      headers: { "Content-Type": "application/json" },
-    })
+  const updateSupervisor = (event) => {
+    const supervisor = {
+      name: document.getElementById("editSuperName").value,
+      email: document.getElementById("editSuperEmail").value,
+      phone: document.getElementById("editSuperPhone").value,
+      isActive: document.getElementById("editSuperStatus").value,
+      password: document.getElementById("editSuperPassword").value,
+    };
+    console.log(supervisor);
+    fetch(
+      "http://localhost:8000/updateSupervisor/" +
+        document.getElementById("superId").value,
+      {
+        method: "POST",
+        body: JSON.stringify(supervisor),
+        headers: { "Content-Type": "application/json" },
+      }
+    )
       .then((response) => response.json())
       .then((data) => {
-        // console.log(data);
-        data.error ? errMsgAlert(data.error) : window.location.reload();
+        data.error ? ErrorHandler(data.error) : window.location.reload();
       })
       .catch((error) => console.error(error));
   };
@@ -56,8 +65,7 @@ function Supervisors() {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
-        data.error ? errMsgAlert(data.error) : succMsgAlert(data.message);
+        data.error ? ErrorHandler(data.error) : window.location.reload();
       })
       .catch((error) => console.error(error));
   };
@@ -69,30 +77,6 @@ function Supervisors() {
     let option = document.getElementById("editSuperStatus").children[1];
     if (supervisor.status === false) option.setAttribute("selected", "");
   };
-  const errMsgAlert = (message) => {
-    const alertPlaceholder = document.getElementById("liveAlertPlaceholder");
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = [
-      `<div class="col alert alert-danger alert-dismissible" role="alert">`,
-      `   <div>${message}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-      "</div>",
-    ].join("");
-
-    alertPlaceholder.append(wrapper);
-  };
-  const succMsgAlert = (message) => {
-    const alertPlaceholder = document.getElementById("liveAlertPlaceholder");
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = [
-      `<div class="col alert alert-success alert-dismissible" role="alert">`,
-      `   <div>${message}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-      "</div>",
-    ].join("");
-
-    alertPlaceholder.append(wrapper);
-  };
 
   return (
     <>
@@ -102,7 +86,7 @@ function Supervisors() {
           Supervisors
         </h1>
         <button
-          className="btn btn-sm btn-outline-dark rounded-circle"
+          className="btn btn-sm btn-outline-dark rounded"
           data-bs-toggle="modal"
           data-bs-target="#addSupervisor"
         >
@@ -135,7 +119,7 @@ function Supervisors() {
                 password={user.password}
                 phone={user.phone}
                 status={user.isActive}
-                warehouseName={null}
+                warehouseName={user.warehouseName}
                 editModal={editSupervisorModal}
                 deleteSuper={deleteSupervisor}
               />
@@ -155,7 +139,7 @@ function Supervisors() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => addSupervisorToDB(e)}>
+            <form onSubmit={(e) => addSupervisor(e)}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Add Supervisor
@@ -246,7 +230,7 @@ function Supervisors() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => updateSupervisorInDB(e)}>
+            <form onSubmit={(e) => updateSupervisor(e)}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Edit Supervisor

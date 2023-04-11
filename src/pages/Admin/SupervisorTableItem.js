@@ -8,7 +8,7 @@ function SupervisorTableItem(props) {
       <td>{props.email}</td>
       <td>{props.phone}</td>
       <td>{props.status ? "Active" : "inActive"}</td>
-      <td>{props.warehouseName}</td>
+      <td>{props.warehouseName? props.warehouseName : "Not Assigned"}</td>
       <td>
         <button
           type="button"

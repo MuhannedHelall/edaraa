@@ -1,14 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
 import WarehouseNavItem from "./WarehouseNavItem";
-import { Link, Outlet } from "react-router-dom";
-import warehouseTableData from "../data/warehouseTableData";
+import DeleteUserCookies from "../components/DeleteUserCookies";
+import ErrorHandler from "../components/ErrorHandler";
 import "../assets/styles/MainPage.css";
 
 function MainPage() {
-  // eslint-disable-next-line
-  const [items, setItems] = useState(warehouseTableData);
+  const [warehouses, setWarehouses] = useState([]);
+  useEffect(() => {
+    fetch("http://localhost:8000/getWarehouses")
+      .then((response) => response.json())
+      .then((data) => setWarehouses(data));
+  }, []);
 
+  const saveCookie = (user) => {
+    if (user.name) Cookies.set("name", user.name, { expires: 7 });
+    if (user.email) Cookies.set("email", user.email, { expires: 7 });
+    if (user.phone) Cookies.set("phone", user.phone, { expires: 7 });
+    window.location.reload();
+  };
+  const editUserModal = () => {
+    document.getElementById("userId").value = Cookies.get("id");
+    document.getElementById("editAdminName").value = Cookies.get("name");
+    document.getElementById("editAdminEmail").value = Cookies.get("email");
+    document.getElementById("editAdminPhone").value = Cookies.get("phone");
+  };
+  const updateUser = (event) => {
+    event.preventDefault();
+    const user = {
+      name: document.getElementById("editAdminName").value,
+      email: document.getElementById("editAdminEmail").value,
+      phone: document.getElementById("editAdminPhone").value,
+      password: document.getElementById("editAdminPassword").value,
+    };
+    fetch(
+      "http://localhost:8000/updateSupervisor/" +
+        document.getElementById("userId").value,
+      {
+        method: "POST",
+        body: JSON.stringify(user),
+        headers: { "Content-Type": "application/json" },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        data.error ? ErrorHandler(data.error) : saveCookie(user);
+      })
+      .catch((error) => console.error(error));
+  };
+
+  // View
   const Admin = () => {
     return (
       <>
@@ -28,7 +70,7 @@ function MainPage() {
           </div>
           <div className="collapse" id="home-collapse">
             <ul className="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-              {items.map((item) => {
+              {warehouses.map((item) => {
                 return (
                   <WarehouseNavItem
                     key={item.id}
@@ -65,49 +107,7 @@ function MainPage() {
       </li>
     );
   };
-  const deleteUserCookies = () => {
-    Cookies.remove("id");
-    Cookies.remove("name");
-    Cookies.remove("email");
-    Cookies.remove("isAdmin");
-    Cookies.remove("isActive");
-    Cookies.remove("phone");
-    Cookies.remove("token");
-    window.location.replace("/");
-  };
-  const errMsgAlert = (message) => {
-    const alertPlaceholder = document.getElementById("liveAlertPlaceholder");
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = [
-      `<div class="col alert alert-danger alert-dismissible" role="alert">`,
-      `   <div>${message}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-      "</div>",
-    ].join("");
 
-    alertPlaceholder.append(wrapper);
-  };
-  const edituserModal = (event) => {
-    event.preventDefault();
-    fetch("http://localhost:8000/updateSupervisor/" + Cookies.get("id"), {
-      method: "POST",
-      body: JSON.stringify({
-        name: event.target[1].value,
-        email: event.target[2].value,
-        password: event.target[3].value,
-        phone: event.target[4].value,
-      }),
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        data.errors
-          ? data.errors.map((err) => errMsgAlert(err))
-          : window.location.reload();
-      })
-      .catch((error) => console.error(error));
-  };
   return (
     <>
       <nav className="navbar navbar-dark bg-dark navbar-expand-lg border-bottom sticky-top">
@@ -138,9 +138,13 @@ function MainPage() {
                 </Link>
               </li>
               <li className="nav-item">
-                <Link to={"/"} className="btn nav-link">
+                <button
+                  type="button"
+                  className="btn nav-link"
+                  onClick={DeleteUserCookies}
+                >
                   Sign out
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
@@ -161,7 +165,9 @@ function MainPage() {
                   Dashboard
                 </Link>
               </li>
-              {Cookies.get("isAdmin") ? Admin() : Supervisor()}
+              {Cookies.get("isAdmin").toLowerCase() === "true"
+                ? Admin()
+                : Supervisor()}
               <li className="mb-1">
                 <Link
                   to={"/Requests"}
@@ -190,6 +196,7 @@ function MainPage() {
                         className="btn link-dark d-inline-flex text-decoration-none rounded fs-6"
                         data-bs-toggle="modal"
                         data-bs-target="#editProfile"
+                        onClick={editUserModal}
                       >
                         <i className="bi bi-person-fill-gear me-2"></i>
                         Edit Profile
@@ -199,7 +206,7 @@ function MainPage() {
                       <button
                         type="button"
                         className="btn link-dark d-inline-flex text-decoration-none rounded fs-6"
-                        onClick={deleteUserCookies}
+                        onClick={DeleteUserCookies}
                       >
                         <i className="bi bi-box-arrow-left me-2"></i>
                         Sign out
@@ -230,10 +237,12 @@ function MainPage() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => edituserModal(e)}>
+            <form onSubmit={(e) => updateUser(e)}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
-                  {Cookies.get("isAdmin") ? "Edit Admin" : "Edit Supervisor"}
+                  {Cookies.get("isAdmin").toLowerCase() === "true"
+                    ? "Edit Admin"
+                    : "Edit Supervisor"}
                 </h5>
                 <button
                   type="button"
@@ -243,6 +252,7 @@ function MainPage() {
                 ></button>
               </div>
               <div className="modal-body">
+                <input id="userId" name="userId" type="hidden" />
                 <div className="mb-3">
                   <label htmlFor="editAdminName" className="form-label">
                     Name
@@ -266,24 +276,41 @@ function MainPage() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="editAdminPassword" className="form-label">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="editAdminPassword"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="editAdminPhoneNumber" className="form-label">
+                  <label htmlFor="editAdminPhone" className="form-label">
                     Phone Number
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="editAdminPhoneNumber"
+                    id="editAdminPhone"
                   />
+                </div>
+                <div className="mb-3">
+                  <button
+                    className="btn btn-outline-dark my-2"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#editPassword"
+                    aria-expanded="false"
+                    aria-controls="collapseWidthExample"
+                  >
+                    Change Password
+                  </button>
+                  <div
+                    id="editPassword"
+                    className="collapse collapse-horizontal"
+                  >
+                    <div style={{ width: "465px" }}>
+                      <label htmlFor="editAdminPassword" className="form-label">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="editAdminPassword"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
@@ -294,7 +321,11 @@ function MainPage() {
                 >
                   Close
                 </button>
-                <button type="submit" className="btn btn-dark px-4">
+                <button
+                  type="submit"
+                  className="btn btn-dark px-4"
+                  data-bs-dismiss="modal"
+                >
                   Save
                 </button>
               </div>

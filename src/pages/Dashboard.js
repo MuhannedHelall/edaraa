@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
-import superWarehouseData from "../data/superWarehouseData";
 
 function Dashboard() {
-  // console.log(Cookies.get());
   const [adminData, setAdminData] = useState([]);
   const [superData, setSuperData] = useState([]);
-
   useEffect(() => {
     fetch("http://localhost:8000/DashboardDataForAdmin")
       .then((response) => response.json())
       .then((data) =>
-        Cookies.get("isAdmin") ? setAdminData(data) : setSuperData(data)
+        Cookies.get("isAdmin").toLowerCase() === "true"
+          ? setAdminData(data)
+          : setSuperData(data)
       )
       .catch((error) => console.error(error));
   }, []);
@@ -55,7 +54,7 @@ function Dashboard() {
       <>
         <div className="col-6 mt-3 box">
           <Link
-            to={"/warehouses/" + superWarehouseData.id}
+            to={"/warehouses/" + Cookies.get("warehouseId")}
             className="text-decoration-none link-dark"
           >
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
@@ -89,7 +88,9 @@ function Dashboard() {
 
       <section className="container-fluid">
         <div className="row" style={{ fontSize: "35pt" }}>
-          {Cookies.get("isAdmin") ? Admin() : Supervisor()}
+          {Cookies.get("isAdmin").toLowerCase() === "true"
+            ? Admin()
+            : Supervisor()}
         </div>
       </section>
     </>

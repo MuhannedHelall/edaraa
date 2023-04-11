@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Supervisors from "./pages/Admin/Supervisors";
 import Warehouses from "./pages/Admin/Warehouses";
 import Requests from "./pages/Admin/Requests";
-import WarehouseProductItem from "./pages/ProductsPage";
+import ProductsPage from "./pages/ProductsPage";
 import NotFound from "./shared/NotFound";
 
 export const router = createBrowserRouter([
@@ -37,7 +37,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "/warehouses/:id",
-            element: <WarehouseProductItem />,
+            element: <ProductsPage />,
           },
           {
             path: "/requests",
@@ -45,6 +45,10 @@ export const router = createBrowserRouter([
           },
           {
             path: "*",
+            element: <NotFound />,
+          },
+          {
+            path: "/NotFound",
             element: <NotFound />,
           },
         ],
