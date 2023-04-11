@@ -119,7 +119,8 @@ function Supervisors() {
                 password={user.password}
                 phone={user.phone}
                 status={user.isActive}
-                warehouseName={user.warehouseName}
+                warehouseId={user.Warehouses[0]?.id}
+                warehouseName={user.Warehouses[0]?.name}
                 editModal={editSupervisorModal}
                 deleteSuper={deleteSupervisor}
               />

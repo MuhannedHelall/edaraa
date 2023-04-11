@@ -1,6 +1,17 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function SupervisorTableItem(props) {
+  const link = () => {
+    return (
+      <Link
+        to={"/warehouses/" + props.warehouseId}
+        className="text-decoration-none link-dark"
+      >
+        {props.warehouseName}
+      </Link>
+    );
+  };
   return (
     <tr>
       <th>{props.index + 1}</th>
@@ -8,7 +19,7 @@ function SupervisorTableItem(props) {
       <td>{props.email}</td>
       <td>{props.phone}</td>
       <td>{props.status ? "Active" : "inActive"}</td>
-      <td>{props.warehouseName? props.warehouseName : "Not Assigned"}</td>
+      <td>{props.warehouseId ? link() : "Not Assigned"}</td>
       <td>
         <button
           type="button"
