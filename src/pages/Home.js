@@ -1,8 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 
 function Home() {
+  const navigate = useNavigate();
   const errMsgAlert = (message) => {
     const alert = document.getElementById("login-alert");
     alert.firstChild.innerText = message;
@@ -16,7 +17,7 @@ function Home() {
     Cookies.set("isActive", user.isActive, { expires: 7 });
     Cookies.set("phone", user.phone, { expires: 7 });
     Cookies.set("token", user.token, { expires: 7 });
-    window.location.replace("/Dashboard");
+    navigate("/Dashboard");
   };
   const login = (event) => {
     event.preventDefault();
@@ -34,7 +35,7 @@ function Home() {
       })
       .catch((error) => console.error(error));
   };
-  console.log(Cookies.get());
+  
   return (
     <>
       <div className="bg-light px-5 py-2 d-flex justify-content-evenly align-items-center sticky-top">

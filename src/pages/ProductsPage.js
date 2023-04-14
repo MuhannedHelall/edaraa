@@ -1,62 +1,66 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import Cookies from "js-cookie";
 import AdminProductItem from "./Admin/AdminProductItem";
 import SupervisorProductItem from "./Supervisor/SupervisorProductItem";
-import warehouseTableData from "../data/warehouseTableData";
-import userData from "../data/userData";
+// import warehouseTableData from "../data/warehouseTableData";
 
 function ProductsPage() {
   const params = useParams();
   // eslint-disable-next-line
-  const [warehouses, setWarehouses] = useState(warehouseTableData);
-  let superWarehouseData = {};
-  warehouses.map((warehouse) => {
-    if (params.id === warehouse.id) superWarehouseData = warehouse;
-    return 0;
-  });
-  // eslint-disable-next-line
-  const [products, setProducts] = useState(superWarehouseData.products);
+  const [products, setProducts] = useState([].products);
 
   const Admin = () => {
-    let flag = 0;
-    warehouses.map((warehouse) => {
-      if (params.id === warehouse.id) flag = 1;
-      return 0;
-    });
-
-    if (!flag) {
-      window.location.replace("http://localhost:3000/*");
-    }
-
     const getModal = (modalData) => {
       document.getElementById("editProductName").value = modalData.title;
       document.getElementById("editDescription").value = modalData.description;
       document.getElementById("editStock").value = modalData.stock;
     };
-
-    return products.map((product) => {
-      return (
+    return (
+      <>
         <AdminProductItem
-          key={product.id}
-          title={product.title}
-          description={product.description}
-          img={product.img}
-          stock={product.stock}
+          key={1}
+          title={"here is title"}
+          description={
+            "it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout."
+          }
+          img={"product.img"}
+          stock={"200"}
           getModal={getModal}
         />
-      );
-    });
+        <AdminProductItem
+          key={1}
+          title={"here is title"}
+          description={
+            "it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout."
+          }
+          img={"product.img"}
+          stock={"200"}
+          getModal={getModal}
+        />
+        <AdminProductItem
+          key={1}
+          title={"here is title"}
+          description={
+            "it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout."
+          }
+          img={"product.img"}
+          stock={"200"}
+          getModal={getModal}
+        />
+      </>
+    );
   };
   const Supervisor = () => {
     const getStockNum = (numOfStocks) => {
       document.getElementById("addStock").value = numOfStocks;
     };
 
-    if (params.id !== superWarehouseData.id) {
+    if (params.id !== [].id) {
       window.location.replace("http://localhost:3000/Dashboard");
     }
     // eslint-disable-next-line
-    const [products, setProducts] = useState(superWarehouseData.products);
+    const [products, setProducts] = useState([].products);
     return products.map((product) => {
       return (
         <SupervisorProductItem
@@ -78,7 +82,7 @@ function ProductsPage() {
           id="addProduct"
           data-bs-backdrop="static"
           data-bs-keyboard="false"
-          tabindex="-1"
+          tabIndex="-1"
           aria-labelledby="staticBackdropLabel"
           aria-hidden="true"
         >
@@ -164,7 +168,7 @@ function ProductsPage() {
           id="editProduct"
           data-bs-backdrop="static"
           data-bs-keyboard="false"
-          tabindex="-1"
+          tabIndex="-1"
           aria-labelledby="staticBackdropLabel"
           aria-hidden="true"
         >
@@ -216,7 +220,7 @@ function ProductsPage() {
                   </div>
                   <div className="input-group mb-3">
                     <input type="file" className="form-control" id="editFile" />
-                    <label className="input-group-text" for="editFile">
+                    <label className="input-group-text" htmlFor="editFile">
                       Upload
                     </label>
                   </div>
@@ -247,7 +251,7 @@ function ProductsPage() {
         id="makeRequest"
         data-bs-backdrop="static"
         data-bs-keyboard="false"
-        tabindex="-1"
+        tabIndex="-1"
         aria-labelledby="staticBackdropLabel"
         aria-hidden="true"
       >
@@ -310,16 +314,22 @@ function ProductsPage() {
           <i className="bi bi-bag-heart mx-2"></i>
           Products
         </h1>
-        {userData.type === "Admin" ? AddProductBtn() : null}
+        {Cookies.get("isAdmin").toLowerCase() === "true"
+          ? AddProductBtn()
+          : null}
       </div>
 
       <section className="container-fluid">
         <div className="row">
-          {userData.type === "Admin" ? Admin() : Supervisor()}
+          {Cookies.get("isAdmin").toLowerCase() === "true"
+            ? Admin()
+            : Supervisor()}
         </div>
       </section>
 
-      {userData.type === "Admin" ? AdminModals() : SupervisorModals()}
+      {Cookies.get("isAdmin").toLowerCase() === "true"
+        ? AdminModals()
+        : SupervisorModals()}
     </>
   );
 }

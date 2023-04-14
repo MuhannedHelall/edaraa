@@ -1,30 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import WarehouseNavItem from "./WarehouseNavItem";
 import DeleteUserCookies from "../components/DeleteUserCookies";
-import ErrorHandler from "../components/ErrorHandler";
+import ResHandler from "./../components/ResHandler";
 import "../assets/styles/MainPage.css";
 
 function MainPage() {
+  const navigate = useNavigate();
   const [warehouses, setWarehouses] = useState([]);
   useEffect(() => {
+    if (Cookies.get("id") === undefined || Cookies.get("id") === null)
+      navigate("/");
+    getAllWarehouses();
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  });
+  const getAllWarehouses = () => {
     fetch("http://localhost:8000/getWarehouses")
       .then((response) => response.json())
       .then((data) => setWarehouses(data));
-  }, []);
-
-  const saveCookie = (user) => {
-    if (user.name) Cookies.set("name", user.name, { expires: 7 });
-    if (user.email) Cookies.set("email", user.email, { expires: 7 });
-    if (user.phone) Cookies.set("phone", user.phone, { expires: 7 });
-    window.location.reload();
-  };
-  const editUserModal = () => {
-    document.getElementById("userId").value = Cookies.get("id");
-    document.getElementById("editAdminName").value = Cookies.get("name");
-    document.getElementById("editAdminEmail").value = Cookies.get("email");
-    document.getElementById("editAdminPhone").value = Cookies.get("phone");
   };
   const updateUser = (event) => {
     event.preventDefault();
@@ -45,9 +42,26 @@ function MainPage() {
     )
       .then((response) => response.json())
       .then((data) => {
-        data.error ? ErrorHandler(data.error) : saveCookie(user);
+        data.error
+          ? ResHandler(data.error, "danger")
+          : saveCookie(data.message, user);
       })
       .catch((error) => console.error(error));
+  };
+  const saveCookie = (msg, user) => {
+    if (user.name) Cookies.set("name", user.name, { expires: 7 });
+    if (user.email) Cookies.set("email", user.email, { expires: 7 });
+    if (user.phone) Cookies.set("phone", user.phone, { expires: 7 });
+    ResHandler(msg);
+  };
+  const editUserModal = () => {
+    document.getElementById("userId").value = Cookies.get("id");
+    document.getElementById("editAdminName").value = Cookies.get("name");
+    document.getElementById("editAdminEmail").value = Cookies.get("email");
+    document.getElementById("editAdminPhone").value = Cookies.get("phone");
+  };
+  const handleClick = () => {
+    document.getElementById("liveAlertPlaceholder").innerHTML = "";
   };
 
   // View
@@ -165,9 +179,7 @@ function MainPage() {
                   Dashboard
                 </Link>
               </li>
-              {Cookies.get("isAdmin").toLowerCase() === "true"
-                ? Admin()
-                : Supervisor()}
+              {Cookies.get("isAdmin") === "true" ? Admin() : Supervisor()}
               <li className="mb-1">
                 <Link
                   to={"/Requests"}
@@ -240,7 +252,7 @@ function MainPage() {
             <form onSubmit={(e) => updateUser(e)}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
-                  {Cookies.get("isAdmin").toLowerCase() === "true"
+                  {Cookies.get("isAdmin") === "true"
                     ? "Edit Admin"
                     : "Edit Supervisor"}
                 </h5>

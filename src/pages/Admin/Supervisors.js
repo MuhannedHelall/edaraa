@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 import SupervisorTableItem from "./SupervisorTableItem";
-import ErrorHandler from "./../../components/ErrorHandler";
+import ResHandler from "../../components/ResHandler";
 
 function Supervisors() {
-  if (Cookies.get("isAdmin").toLowerCase() !== "true")
-    window.location.replace("/NotFound");
+  const navigate = useNavigate();
+  if (Cookies.get("isAdmin") !== "true") navigate("/NotFound");
 
   const [users, setUsers] = useState([]);
-  useEffect(() => {
+  useEffect(() => getAllSupervisors());
+
+  const getAllSupervisors = () => {
     fetch("http://localhost:8000/getAllSupervisors")
       .then((response) => response.json())
       .then((data) => setUsers(data));
-  }, []);
-
+  };
   const addSupervisor = (event) => {
     event.preventDefault();
     fetch("http://localhost:8000/addSupervisor", {
@@ -28,44 +30,53 @@ function Supervisors() {
     })
       .then((response) => response.json())
       .then((data) => {
+        getAllSupervisors();
         data.errors
-          ? data.errors.map((err) => ErrorHandler(err))
-          : window.location.reload();
+          ? data.errors.map((err) => ResHandler(err, "danger"))
+          : ResHandler(data.message);
+        document.getElementById("addSuperName").value = "";
+        document.getElementById("addSuperEmail").value = "";
+        document.getElementById("addSuperPassword").value = "";
+        document.getElementById("addSuperPhone").value = "";
       })
       .catch((error) => console.error(error));
   };
   const updateSupervisor = (event) => {
-    const supervisor = {
-      name: document.getElementById("editSuperName").value,
-      email: document.getElementById("editSuperEmail").value,
-      phone: document.getElementById("editSuperPhone").value,
-      isActive: document.getElementById("editSuperStatus").value,
-      password: document.getElementById("editSuperPassword").value,
-    };
-    console.log(supervisor);
+    event.preventDefault();
     fetch(
       "http://localhost:8000/updateSupervisor/" +
         document.getElementById("superId").value,
       {
         method: "POST",
-        body: JSON.stringify(supervisor),
+        body: JSON.stringify({
+          name: document.getElementById("editSuperName").value,
+          email: document.getElementById("editSuperEmail").value,
+          phone: document.getElementById("editSuperPhone").value,
+          password: document.getElementById("editSuperPassword").value,
+        }),
         headers: { "Content-Type": "application/json" },
       }
     )
       .then((response) => response.json())
       .then((data) => {
-        data.error ? ErrorHandler(data.error) : window.location.reload();
+        getAllSupervisors();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
       })
       .catch((error) => console.error(error));
   };
-  const deleteSupervisor = (id) => {
-    fetch("http://localhost:8000/deleteSupervisor/" + id, {
+  const deleteSupervisor = (supervisor) => {
+    fetch("http://localhost:8000/deleteSupervisor/" + supervisor.id, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
       .then((response) => response.json())
       .then((data) => {
-        data.error ? ErrorHandler(data.error) : window.location.reload();
+        getAllSupervisors();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : setWarehouseInActive(supervisor.warehouseId, data.message);
       })
       .catch((error) => console.error(error));
   };
@@ -74,13 +85,22 @@ function Supervisors() {
     document.getElementById("editSuperName").value = supervisor.name;
     document.getElementById("editSuperEmail").value = supervisor.email;
     document.getElementById("editSuperPhone").value = supervisor.phone;
-    let option = document.getElementById("editSuperStatus").children[1];
-    if (supervisor.status === false) option.setAttribute("selected", "");
+  };
+  const setWarehouseInActive = (id, msg) => {
+    fetch("http://localhost:8000/setWarehouseInActive/" + id, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        data.error ? ResHandler(data.error, "danger") : ResHandler(msg);
+      })
+      .catch((error) => console.error(error));
   };
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap pb-3 mb-2 border-bottom">
+      <div className="d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap py-3 mb-2 border-bottom">
         <h1 className="h2">
           <i className="bi bi-people mx-2"></i>
           Supervisors
@@ -97,13 +117,13 @@ function Supervisors() {
       <table className="table table-striped table-bordered table-hover text-center my-3">
         <thead className="table-dark">
           <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Status</th>
-            <th>Warehouse Name</th>
-            <th>Action</th>
+            <th className="col-1">#</th>
+            <th className="col-2">Name</th>
+            <th className="col-2">Email</th>
+            <th className="col-2">Phone</th>
+            <th className="col-1">Status</th>
+            <th className="col-2">Warehouse Name</th>
+            <th className="col-2">Action</th>
           </tr>
         </thead>
 
@@ -277,15 +297,6 @@ function Supervisors() {
                     id="editSuperPhone"
                     required
                   />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="editSuperStatus" className="form-label">
-                    Status
-                  </label>
-                  <select id="editSuperStatus" className="form-select" required>
-                    <option value="true">Active</option>
-                    <option value="false">inActive</option>
-                  </select>
                 </div>
                 <div className="mb-3">
                   <button

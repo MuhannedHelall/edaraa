@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
+import Cookies from "js-cookie";
 
 function Dashboard() {
   const [adminData, setAdminData] = useState([]);
@@ -9,12 +9,12 @@ function Dashboard() {
     fetch("http://localhost:8000/DashboardDataForAdmin")
       .then((response) => response.json())
       .then((data) =>
-        Cookies.get("isAdmin").toLowerCase() === "true"
+        Cookies.get("isAdmin") === "true"
           ? setAdminData(data)
           : setSuperData(data)
       )
       .catch((error) => console.error(error));
-  }, []);
+  });
 
   const Admin = () => {
     return (
@@ -88,9 +88,7 @@ function Dashboard() {
 
       <section className="container-fluid">
         <div className="row" style={{ fontSize: "35pt" }}>
-          {Cookies.get("isAdmin").toLowerCase() === "true"
-            ? Admin()
-            : Supervisor()}
+          {Cookies.get("isAdmin") === "true" ? Admin() : Supervisor()}
         </div>
       </section>
     </>

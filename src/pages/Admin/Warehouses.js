@@ -1,87 +1,153 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import WarehouseTableItem from "./WarehouseTableItem";
-import ErrorHandler from "./../../components/ErrorHandler";
+import ResHandler from "./../../components/ResHandler";
+import { useNavigate } from "react-router-dom";
 
 function Warehouses() {
-  if (Cookies.get("isAdmin").toLowerCase() !== "true")
-    window.location.replace("/NotFound");
+  const navigate = useNavigate();
+  if (Cookies.get("isAdmin") !== "true") navigate("/NotFound");
 
   const [warehouses, setWarehouses] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
+  var isSuperFoundBool = false;
   useEffect(() => {
+    getAllWarehouses();
+    getInActiveSupervisors();
+  }, []);
+
+  const getAllWarehouses = () => {
     fetch("http://localhost:8000/getWarehouses")
       .then((response) => response.json())
       .then((data) => setWarehouses(data));
-  }, []);
-
-  const [supervisors, setSupervisors] = useState([]);
-  useEffect(() => {
-    fetch("http://localhost:8000/getInActiveSupervisors")
-      .then((response) => response.json())
-      .then((data) => setSupervisors(data));
-  }, []);
-
+  };
   const addWarehouse = (event) => {
     event.preventDefault();
+    let addName = document.getElementById("addWarehouseName");
+    let addLoc = document.getElementById("addWarehouseLocation");
+    let addSuper = document.getElementById("addWarehouseSuper");
     fetch("http://localhost:8000/addWarehouse", {
       method: "POST",
       body: JSON.stringify({
-        name: event.target[1].value,
-        location: event.target[2].value,
-        userID: event.target[3].value,
-      }),
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((response) => response.json())
-      .then((data) =>
-        data.error ? ErrorHandler(data.error) : window.location.reload()
-      )
-      .catch((error) => console.error(error));
-  };
-  const editWarehouse = (event) => {
-    event.preventDefault();
-    fetch("http://localhost:8000/updateWarehouse/" + event.target[1].value, {
-      method: "PUT",
-      body: JSON.stringify({
-        name: event.target[2].value,
-        UserId: event.target[3].value,
-        location: event.target[4].value,
-        isActive: event.target[5].value,
+        name: addName.value,
+        location: addLoc.value,
+        userID: addSuper.value,
       }),
       headers: { "Content-Type": "application/json" },
     })
       .then((response) => response.json())
       .then((data) => {
-        data.error ? ErrorHandler(data.error) : window.location.reload();
+        setSuperActive(addSuper.value);
+        getAllWarehouses();
+        getInActiveSupervisors();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
+        addName.value = "";
+        addLoc.value = "";
+        addSuper.value = "";
       })
       .catch((error) => console.error(error));
   };
-  const deleteWarehouse = (id) => {
-    fetch("http://localhost:8000/deleteWarehouse/" + id, {
+  const editWarehouse = (event) => {
+    event.preventDefault();
+    fetch(
+      "http://localhost:8000/updateWarehouse/" +
+        document.getElementById("warehouseId").value,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          name: document.getElementById("editWarehouseName").value,
+          location: document.getElementById("editWarehouseLocation").value,
+          UserId: document.getElementById("editWarehouseSuper").value,
+        }),
+        headers: { "Content-Type": "application/json" },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (!isSuperFoundBool) {
+          setWarehouseActive(document.getElementById("warehouseId").value);
+          setSuperActive(document.getElementById("editWarehouseSuper").value);
+        }
+        getAllWarehouses();
+        getInActiveSupervisors();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
+      })
+      .catch((error) => console.error(error));
+  };
+  const deleteWarehouse = (warehouse) => {
+    fetch("http://localhost:8000/deleteWarehouse/" + warehouse.id, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
       .then((response) => response.json())
       .then((data) => {
-        data.error ? ErrorHandler(data.error) : window.location.reload();
+        setSuperInActive(warehouse.superId);
+        getAllWarehouses();
+        getInActiveSupervisors();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
       })
       .catch((error) => console.error(error));
   };
+
+  //
   const editWarehouseModal = (warehouse) => {
     document.getElementById("warehouseId").value = warehouse.id;
     document.getElementById("editWarehouseName").value = warehouse.name;
-
-    let superSelect = document.getElementById("editWarehouseSuper");
-    for (let i = 0; i < superSelect.length; i++)
-      if (
-        parseInt(superSelect.children[i].value) === parseInt(warehouse.superId)
-      )
-        superSelect.children[i].setAttribute("selected", "");
-
-    document.getElementById("editWarehouseLocation").value = warehouse.superId;
     document.getElementById("editWarehouseLocation").value = warehouse.location;
-    let option = document.getElementById("editWarehouseStatus").children[1];
-    if (!warehouse.status) option.setAttribute("selected", "");
+    isSuperFoundBool
+      ? document.getElementById("showEditSuper").classList.add("d-none")
+      : document.getElementById("showEditSuper").classList.remove("d-none");
+  };
+  const isSuperFound = (flag) => (isSuperFoundBool = flag);
+
+  //
+  const getInActiveSupervisors = () => {
+    fetch("http://localhost:8000/getInActiveSupervisors")
+      .then((response) => response.json())
+      .then((data) => setSupervisors(data));
+  };
+  const setSuperActive = (id) => {
+    fetch("http://localhost:8000/setActive/" + id, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        getAllWarehouses();
+        getInActiveSupervisors();
+        if (data.error) ResHandler(data.error, "danger");
+      })
+      .catch((error) => console.error(error));
+  };
+  const setSuperInActive = (id) => {
+    fetch("http://localhost:8000/setInActive/" + id, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        getAllWarehouses();
+        if (data.error) ResHandler(data.error, "danger");
+      })
+      .catch((error) => console.error(error));
+  };
+  const setWarehouseActive = (id) => {
+    fetch("http://localhost:8000/setWarehouseActive/" + id, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        getAllWarehouses();
+        if (data.error) ResHandler(data.error, "danger");
+      })
+      .catch((error) => console.error(error));
   };
 
   return (
@@ -106,12 +172,12 @@ function Warehouses() {
       >
         <thead className="table-dark">
           <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Supervisor Name</th>
-            <th>Location</th>
-            <th>Status</th>
-            <th>Action</th>
+            <th className="col-1">#</th>
+            <th className="col-3">Name</th>
+            <th className="col-2">Location</th>
+            <th className="col-3">Supervisor Name</th>
+            <th className="col-1">Status</th>
+            <th className="col-2">Action</th>
           </tr>
         </thead>
 
@@ -122,13 +188,14 @@ function Warehouses() {
                 key={warehouse.id}
                 id={warehouse.id}
                 index={index + 1}
-                name={warehouse.name}
-                superName={warehouse.User.name}
-                superId={warehouse.User.id}
+                name={warehouse?.name}
+                superName={warehouse.User?.name}
+                superId={warehouse.User?.id}
                 location={warehouse.location}
                 status={warehouse.isActive}
                 products={warehouse.products}
                 editModal={editWarehouseModal}
+                isSuperFound={isSuperFound}
                 deleteWarehouse={deleteWarehouse}
               />
             );
@@ -253,6 +320,16 @@ function Warehouses() {
                   />
                 </div>
                 <div className="mb-3">
+                  <label htmlFor="editWarehouseLocation" className="form-label">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="editWarehouseLocation"
+                  />
+                </div>
+                <div className="mb-3 d-none" id="showEditSuper">
                   <label htmlFor="editWarehouseSuper" className="form-label">
                     Supervisor
                   </label>
@@ -266,25 +343,6 @@ function Warehouses() {
                     })}
                   </select>
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="editWarehouseLocation" className="form-label">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="editWarehouseLocation"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="editWarehouseStatus" className="form-label">
-                    Status
-                  </label>
-                  <select className="form-select" id="editWarehouseStatus">
-                    <option value="true">Active</option>
-                    <option value="false">inActive</option>
-                  </select>
-                </div>
               </div>
               <div className="modal-footer">
                 <button
@@ -294,7 +352,11 @@ function Warehouses() {
                 >
                   Close
                 </button>
-                <button type="submit" className="btn btn-dark px-4">
+                <button
+                  type="submit"
+                  className="btn btn-dark px-4"
+                  data-bs-dismiss="modal"
+                >
                   Save
                 </button>
               </div>

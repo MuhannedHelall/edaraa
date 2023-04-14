@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AdminRequestTableItem from "./AdminRequestTableItem";
-import SuperRequestTableItem from "./SuperRequestTableItem";
+import SuperRequestTableItem from "../Supervisor/SuperRequestTableItem";
 import userData from "../../data/userData";
 
 function Requests() {
@@ -13,10 +13,10 @@ function Requests() {
         <thead className="table-dark">
           <tr>
             <th>#</th>
+            <th>Supervisor Name</th>
             <th>Product Name</th>
             <th>Requested Quantity</th>
             <th>Stock Quantity</th>
-            <th>Supervisor Name</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -130,49 +130,7 @@ function Requests() {
           Requests
         </h1>
       </div>
-
       {userData.type === "Admin" ? Admin() : Supervisor()}
-
-      <div
-        className="modal fade"
-        id="confirm"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabIndex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="exampleModalLabel">
-                Confirmation Message
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body">
-              <h1 className="text-center">Are you sure ?</h1>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                Close
-              </button>
-              <button type="button" className="btn btn-dark px-2">
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 }
