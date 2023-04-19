@@ -4,19 +4,21 @@ import Cookies from "js-cookie";
 
 function Home() {
   const navigate = useNavigate();
+  if (Cookies.get("id")) navigate("/Dashboard");
   const errMsgAlert = (message) => {
     const alert = document.getElementById("login-alert");
     alert.firstChild.innerText = message;
     alert.classList.remove("opacity-0");
   };
-  const saveCookie = (user) => {
-    Cookies.set("id", user.id, { expires: 7 });
-    Cookies.set("name", user.name, { expires: 7 });
-    Cookies.set("email", user.email, { expires: 7 });
-    Cookies.set("isAdmin", user.isAdmin, { expires: 7 });
-    Cookies.set("isActive", user.isActive, { expires: 7 });
-    Cookies.set("phone", user.phone, { expires: 7 });
-    Cookies.set("token", user.token, { expires: 7 });
+  const saveCookie = (data) => {
+    Cookies.set("id", data.user.id);
+    Cookies.set("name", data.user.name);
+    Cookies.set("email", data.user.email);
+    Cookies.set("isAdmin", data.user.isAdmin);
+    Cookies.set("isActive", data.user.isActive);
+    Cookies.set("warehouseId", data.WarehouseID?.id);
+    Cookies.set("phone", data.user.phone);
+    Cookies.set("token", data.user.token);
     navigate("/Dashboard");
   };
   const login = (event) => {
@@ -31,11 +33,11 @@ function Home() {
     })
       .then((response) => response.json())
       .then((data) => {
-        data.user ? saveCookie(data.user) : errMsgAlert(data.error);
+        data.user ? saveCookie(data) : errMsgAlert(data.error);
       })
       .catch((error) => console.error(error));
   };
-  
+
   return (
     <>
       <div className="bg-light px-5 py-2 d-flex justify-content-evenly align-items-center sticky-top">
@@ -127,6 +129,7 @@ function Home() {
                     id="login-email"
                     aria-describedby="emailHelp"
                     name="email"
+                    required
                   />
                   <div id="emailHelp" className="form-text">
                     We'll never share your email with anyone else.

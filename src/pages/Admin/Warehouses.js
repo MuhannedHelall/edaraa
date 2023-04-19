@@ -10,7 +10,7 @@ function Warehouses() {
 
   const [warehouses, setWarehouses] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
-  var isSuperFoundBool = false;
+  var [isSuperFoundBool, setIsSuperFoundBool] = useState(false);
   useEffect(() => {
     getAllWarehouses();
     getInActiveSupervisors();
@@ -59,7 +59,7 @@ function Warehouses() {
         body: JSON.stringify({
           name: document.getElementById("editWarehouseName").value,
           location: document.getElementById("editWarehouseLocation").value,
-          UserId: document.getElementById("editWarehouseSuper").value,
+          UserId: document.getElementById("editWarehouseSuper")?.value,
         }),
         headers: { "Content-Type": "application/json" },
       }
@@ -95,16 +95,13 @@ function Warehouses() {
       .catch((error) => console.error(error));
   };
 
-  //
+  // DOM Manipulation
   const editWarehouseModal = (warehouse) => {
     document.getElementById("warehouseId").value = warehouse.id;
     document.getElementById("editWarehouseName").value = warehouse.name;
     document.getElementById("editWarehouseLocation").value = warehouse.location;
-    isSuperFoundBool
-      ? document.getElementById("showEditSuper").classList.add("d-none")
-      : document.getElementById("showEditSuper").classList.remove("d-none");
   };
-  const isSuperFound = (flag) => (isSuperFoundBool = flag);
+  const isSuperFound = (flag) => setIsSuperFoundBool(flag);
 
   //
   const getInActiveSupervisors = () => {
@@ -150,6 +147,25 @@ function Warehouses() {
       .catch((error) => console.error(error));
   };
 
+  //View
+  const showPassword = () => {
+    return (
+      <div className="mb-3">
+        <label htmlFor="editWarehouseSuper" className="form-label">
+          Supervisor
+        </label>
+        <select className="form-select" id="editWarehouseSuper">
+          {supervisors.map((supervisor) => {
+            return (
+              <option key={supervisor.id} value={supervisor.id}>
+                {supervisor.name}
+              </option>
+            );
+          })}
+        </select>
+      </div>
+    );
+  };
   return (
     <>
       <div className="d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap py-3 mb-2 border-bottom">
@@ -166,10 +182,7 @@ function Warehouses() {
         </button>
       </div>
 
-      <table
-        className="table table-striped table-bordered table-hover text-center my-3"
-        style={{ cursor: "pointer" }}
-      >
+      <table className="table table-striped table-bordered table-hover text-center my-3">
         <thead className="table-dark">
           <tr>
             <th className="col-1">#</th>
@@ -329,20 +342,7 @@ function Warehouses() {
                     id="editWarehouseLocation"
                   />
                 </div>
-                <div className="mb-3 d-none" id="showEditSuper">
-                  <label htmlFor="editWarehouseSuper" className="form-label">
-                    Supervisor
-                  </label>
-                  <select className="form-select" id="editWarehouseSuper">
-                    {supervisors.map((supervisor) => {
-                      return (
-                        <option key={supervisor.id} value={supervisor.id}>
-                          {supervisor.name}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
+                {!isSuperFoundBool ? showPassword() : null}
               </div>
               <div className="modal-footer">
                 <button

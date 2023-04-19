@@ -9,7 +9,7 @@ function Supervisors() {
   if (Cookies.get("isAdmin") !== "true") navigate("/NotFound");
 
   const [users, setUsers] = useState([]);
-  useEffect(() => getAllSupervisors());
+  useEffect(() => getAllSupervisors(), []);
 
   const getAllSupervisors = () => {
     fetch("http://localhost:8000/getAllSupervisors")
@@ -73,27 +73,32 @@ function Supervisors() {
     })
       .then((response) => response.json())
       .then((data) => {
+        setWarehouseInActive(supervisor.warehouseId);
         getAllSupervisors();
         data.error
           ? ResHandler(data.error, "danger")
-          : setWarehouseInActive(supervisor.warehouseId, data.message);
+          : ResHandler(data.message);
       })
       .catch((error) => console.error(error));
   };
+
+  //DOM Manipulation
   const editSupervisorModal = (supervisor) => {
     document.getElementById("superId").value = supervisor.id;
     document.getElementById("editSuperName").value = supervisor.name;
     document.getElementById("editSuperEmail").value = supervisor.email;
     document.getElementById("editSuperPhone").value = supervisor.phone;
   };
-  const setWarehouseInActive = (id, msg) => {
+
+  //
+  const setWarehouseInActive = (id) => {
     fetch("http://localhost:8000/setWarehouseInActive/" + id, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then((response) => response.json())
       .then((data) => {
-        data.error ? ResHandler(data.error, "danger") : ResHandler(msg);
+        if (data.error) ResHandler(data.error, "danger");
       })
       .catch((error) => console.error(error));
   };

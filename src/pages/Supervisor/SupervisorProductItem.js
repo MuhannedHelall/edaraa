@@ -1,4 +1,5 @@
 import React from "react";
+import img from "../../assets/imgs/1.jpg";
 
 function SupervisorProductItem(props) {
   return (
@@ -12,9 +13,10 @@ function SupervisorProductItem(props) {
               alt="..."
             />
           </div>
+          <input type="hidden" id="productId" value={props.id} />
           <div className="col-md-8">
             <div className="card-body">
-              <h5 className="card-title text-center">{props.title}</h5>
+              <h5 className="card-title text-center">{props.name}</h5>
               <p className="card-text" style={{ textAlign: "justify" }}>
                 {props.description}
               </p>
@@ -29,9 +31,7 @@ function SupervisorProductItem(props) {
                   className="btn btn-sm btn-outline-secondary"
                   data-bs-toggle="modal"
                   data-bs-target="#makeRequest"
-                  onClick={() => {
-                    props.getStockNum(props.stock);
-                  }}
+                  onClick={() => props.getRequestData(props.id)}
                 >
                   Request
                 </button>

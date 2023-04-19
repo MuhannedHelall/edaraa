@@ -14,7 +14,7 @@ function AdminProductItem(props) {
           </div>
           <div className="col-md-8">
             <div className="card-body">
-              <h5 className="card-title text-center">{props.title}</h5>
+              <h5 className="card-title text-center">{props.name}</h5>
               <p className="card-text" style={{ textAlign: "justify" }}>
                 {props.description}
               </p>
@@ -30,15 +30,14 @@ function AdminProductItem(props) {
                     className="btn btn-outline-secondary text-decoration-none me-2"
                     data-bs-toggle="modal"
                     data-bs-target="#editProduct"
-                    onClick={() => {
-                      props.getModal(props);
-                    }}
+                    onClick={() => props.editProductModal(props)}
                   >
                     <i className="bi bi-pencil"></i>
                   </button>
                   <button
                     type="button"
                     className="btn btn-outline-danger text-decoration-none"
+                    onClick={() => props.deleteProduct(props)}
                   >
                     <i className="bi bi-trash-fill"></i>
                   </button>

@@ -17,7 +17,8 @@ function MainPage() {
     return () => {
       document.removeEventListener("click", handleClick);
     };
-  });
+  }, []);
+
   const getAllWarehouses = () => {
     fetch("http://localhost:8000/getWarehouses")
       .then((response) => response.json())

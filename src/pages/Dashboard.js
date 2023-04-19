@@ -6,16 +6,28 @@ function Dashboard() {
   const [adminData, setAdminData] = useState([]);
   const [superData, setSuperData] = useState([]);
   useEffect(() => {
+    Cookies.get("isAdmin") === "true"
+      ? getAdminDashboard()
+      : getSuperDashboard();
+  }, []);
+  const getAdminDashboard = () => {
     fetch("http://localhost:8000/DashboardDataForAdmin")
       .then((response) => response.json())
-      .then((data) =>
-        Cookies.get("isAdmin") === "true"
-          ? setAdminData(data)
-          : setSuperData(data)
-      )
+      .then((data) => setAdminData(data))
       .catch((error) => console.error(error));
-  });
-
+  };
+  const getSuperDashboard = () => {
+    fetch("http://localhost:8000/DashboardDataForSupervisor", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        userid: Cookies.get("id"),
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => setSuperData(data))
+      .catch((error) => console.error(error));
+  };
   const Admin = () => {
     return (
       <>
@@ -60,7 +72,7 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-bag-heart" style={{ fontSize: "80pt" }}></i>
               <p>Products</p>
-              <p>{superData.numOfProducts}</p>
+              <p>{superData.Products}</p>
             </div>
           </Link>
         </div>
@@ -69,7 +81,7 @@ function Dashboard() {
             <div className="text-center border border-2 rounded-3 bg-light shadow py-3 my-5 mt-5 w-100">
               <i className="bi bi-bell" style={{ fontSize: "80pt" }}></i>
               <p>Requests</p>
-              <p>{superData.numOfRequests}</p>
+              <p>{superData.Requests}</p>
             </div>
           </Link>
         </div>

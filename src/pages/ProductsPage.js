@@ -1,80 +1,181 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import AdminProductItem from "./Admin/AdminProductItem";
 import SupervisorProductItem from "./Supervisor/SupervisorProductItem";
-// import warehouseTableData from "../data/warehouseTableData";
+import ResHandler from "../components/ResHandler";
 
 function ProductsPage() {
   const params = useParams();
+  const [products, setProducts] = useState([]);
+  const [image, setImage] = useState(null);
   // eslint-disable-next-line
-  const [products, setProducts] = useState([].products);
+  useEffect(() => getAllProducts(), []);
 
-  const Admin = () => {
-    const getModal = (modalData) => {
-      document.getElementById("editProductName").value = modalData.title;
-      document.getElementById("editDescription").value = modalData.description;
-      document.getElementById("editStock").value = modalData.stock;
-    };
-    return (
-      <>
-        <AdminProductItem
-          key={1}
-          title={"here is title"}
-          description={
-            "it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout."
-          }
-          img={"product.img"}
-          stock={"200"}
-          getModal={getModal}
-        />
-        <AdminProductItem
-          key={1}
-          title={"here is title"}
-          description={
-            "it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout."
-          }
-          img={"product.img"}
-          stock={"200"}
-          getModal={getModal}
-        />
-        <AdminProductItem
-          key={1}
-          title={"here is title"}
-          description={
-            "it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout."
-          }
-          img={"product.img"}
-          stock={"200"}
-          getModal={getModal}
-        />
-      </>
+  const getAllProducts = () => {
+    fetch("http://localhost:8000/getAllProducts/" + params.id)
+      .then((response) => response.json())
+      .then((data) => {
+        data.error ? ResHandler(data.error, "danger") : setProducts(data);
+      });
+  };
+
+  const addProduct = (event) => {
+    event.preventDefault();
+    let name = document.getElementById("addProductName");
+    let desc = document.getElementById("addDescription");
+    let stock = document.getElementById("addStock");
+    let price = document.getElementById("addPrice");
+    let img = document.getElementById("addImg");
+    const formData = new FormData();
+    formData.append("name", name.value);
+    formData.append("description", desc.value);
+    formData.append("stock", stock.value);
+    formData.append("price", price.value);
+    formData.append("image", image);
+    fetch("http://localhost:8000/addNewProduct/" + params.id, {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        getAllProducts();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
+      })
+      .catch((error) => console.error(error));
+    name.value = "";
+    desc.value = "";
+    stock.value = "";
+    price.value = "";
+    img.value = "";
+  };
+
+  const editProduct = (event) => {
+    event.preventDefault();
+    const formData = new FormData();
+    formData.append("name", document.getElementById("editProductName").value);
+    formData.append(
+      "description",
+      document.getElementById("editDescription").value
     );
+    formData.append("stock", document.getElementById("editStock").value);
+    formData.append("price", document.getElementById("editPrice").value);
+    formData.append("image", image);
+    fetch(
+      "http://localhost:8000/updateProduct/" +
+        document.getElementById("productId").value,
+      {
+        method: "POST",
+        body: formData,
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        getAllProducts();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const deleteProduct = (product) => {
+    fetch("http://localhost:8000/deleteProduct/" + product.id, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        getAllProducts();
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const makeRequest = (event) => {
+    event.preventDefault();
+    const data = {
+      SupervisorID: Cookies.get("id"),
+      ProductID: document.getElementById("superRequestMaking").value,
+      quantity: document.getElementById("stockRequest").value,
+      isIncrease: document.getElementById("isIncrease").value,
+    };
+    var formBody = [];
+    for (var property in data) {
+      var encodedKey = encodeURIComponent(property);
+      var encodedValue = encodeURIComponent(data[property]);
+      formBody.push(encodedKey + "=" + encodedValue);
+    }
+    formBody = formBody.join("&");
+    fetch("http://localhost:8000/makeRequest", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formBody,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        data.error
+          ? ResHandler(data.error, "danger")
+          : ResHandler(data.message);
+      })
+      .catch((error) => console.error(error));
+  };
+
+  //View
+  const Admin = () => {
+    const editProductModal = (product) => {
+      document.getElementById("productId").value = product.id;
+      document.getElementById("editProductName").value = product.name;
+      document.getElementById("editDescription").value = product.description;
+      document.getElementById("editStock").value = product.stock;
+      document.getElementById("editPrice").value = product.price;
+    };
+    return products.map((product) => {
+      console.log(product);
+      return (
+        <AdminProductItem
+          key={product.id}
+          id={product.id}
+          name={product.name}
+          description={product.description}
+          stock={product.stock}
+          price={product.price}
+          img={product.image}
+          editProductModal={editProductModal}
+          deleteProduct={deleteProduct}
+        />
+      );
+    });
   };
   const Supervisor = () => {
-    const getStockNum = (numOfStocks) => {
-      document.getElementById("addStock").value = numOfStocks;
+    const getRequestData = (requestId) => {
+      document.getElementById("superRequestMaking").value = requestId;
     };
 
-    if (params.id !== [].id) {
-      window.location.replace("http://localhost:3000/Dashboard");
-    }
-    // eslint-disable-next-line
-    const [products, setProducts] = useState([].products);
     return products.map((product) => {
       return (
         <SupervisorProductItem
           key={product.id}
-          title={product.title}
+          id={product.id}
+          name={product.name}
           description={product.description}
-          img={product.img}
+          img={product.image}
           stock={product.stock}
-          getStockNum={getStockNum}
+          getRequestData={getRequestData}
         />
       );
     });
   };
   const AdminModals = () => {
+    const handleFileChange = (event) => {
+      setImage(event.target.files[0]);
+    };
     return (
       <>
         <div
@@ -88,7 +189,7 @@ function ProductsPage() {
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <form>
+              <form encType="multipart/form-data" onSubmit={addProduct}>
                 <div className="modal-header">
                   <h5 className="modal-title" id="exampleModalLabel">
                     Add Product
@@ -109,6 +210,7 @@ function ProductsPage() {
                       type="text"
                       className="form-control"
                       id="addProductName"
+                      required
                     />
                   </div>
                   <div className="mb-3">
@@ -120,6 +222,7 @@ function ProductsPage() {
                       className="form-control"
                       id="addDescription"
                       aria-describedby="emailHelp"
+                      required
                     />
                   </div>
                   <div className="mb-3">
@@ -130,20 +233,28 @@ function ProductsPage() {
                       type="number"
                       className="form-control"
                       id="addStock"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="addPrice" className="form-label">
+                      Price
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="addPrice"
+                      required
                     />
                   </div>
                   <div className="input-group mb-3">
                     <input
                       type="file"
                       className="form-control"
-                      id="inputGroupFile02"
+                      id="addImg"
+                      onChange={handleFileChange}
+                      required
                     />
-                    <label
-                      className="input-group-text"
-                      htmlFor="inputGroupFile02"
-                    >
-                      Upload
-                    </label>
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -154,7 +265,11 @@ function ProductsPage() {
                   >
                     Close
                   </button>
-                  <button type="submit" className="btn btn-dark px-4">
+                  <button
+                    type="submit"
+                    className="btn btn-dark px-4"
+                    data-bs-dismiss="modal"
+                  >
                     Add
                   </button>
                 </div>
@@ -174,7 +289,7 @@ function ProductsPage() {
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <form>
+              <form encType="multipart/form-data" onSubmit={editProduct}>
                 <div className="modal-header">
                   <h5 className="modal-title" id="exampleModalLabel">
                     Edit Product
@@ -187,6 +302,7 @@ function ProductsPage() {
                   ></button>
                 </div>
                 <div className="modal-body">
+                  <input type="hidden" id="productId" />
                   <div className="mb-3">
                     <label htmlFor="editProductName" className="form-label">
                       Name
@@ -218,11 +334,23 @@ function ProductsPage() {
                       id="editStock"
                     />
                   </div>
-                  <div className="input-group mb-3">
-                    <input type="file" className="form-control" id="editFile" />
-                    <label className="input-group-text" htmlFor="editFile">
-                      Upload
+                  <div className="mb-3">
+                    <label htmlFor="editPrice" className="form-label">
+                      Price
                     </label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="editPrice"
+                    />
+                  </div>
+                  <div className="input-group mb-3">
+                    <input
+                      type="file"
+                      className="form-control"
+                      id="editFile"
+                      onChange={handleFileChange}
+                    />
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -233,7 +361,11 @@ function ProductsPage() {
                   >
                     Close
                   </button>
-                  <button type="submit" className="btn btn-dark px-4">
+                  <button
+                    type="submit"
+                    className="btn btn-dark px-4"
+                    data-bs-dismiss="modal"
+                  >
                     Save
                   </button>
                 </div>
@@ -257,10 +389,10 @@ function ProductsPage() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form>
+            <form onSubmit={(e) => makeRequest(e)}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
-                  Edit Product
+                  Make a Request
                 </h5>
                 <button
                   type="button"
@@ -270,11 +402,22 @@ function ProductsPage() {
                 ></button>
               </div>
               <div className="modal-body">
+                <input type="hidden" id="superRequestMaking" />
                 <div className="mb-3">
-                  <label htmlFor="addStock" className="form-label">
+                  <label htmlFor="stockRequest" className="form-label">
                     Stock Quantity
                   </label>
-                  <input type="number" className="form-control" id="addStock" />
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="stockRequest"
+                  />
+                </div>
+                <div className="mb-3">
+                  <select className="form-control" id="isIncrease">
+                    <option value={true}>Increase</option>
+                    <option value={false}>Decrease</option>
+                  </select>
                 </div>
               </div>
               <div className="modal-footer">
@@ -285,7 +428,11 @@ function ProductsPage() {
                 >
                   Close
                 </button>
-                <button type="submit" className="btn btn-dark px-4">
+                <button
+                  type="submit"
+                  className="btn btn-dark px-4"
+                  data-bs-dismiss="modal"
+                >
                   Save
                 </button>
               </div>
@@ -314,22 +461,16 @@ function ProductsPage() {
           <i className="bi bi-bag-heart mx-2"></i>
           Products
         </h1>
-        {Cookies.get("isAdmin").toLowerCase() === "true"
-          ? AddProductBtn()
-          : null}
+        {Cookies.get("isAdmin") === "true" ? AddProductBtn() : null}
       </div>
 
       <section className="container-fluid">
         <div className="row">
-          {Cookies.get("isAdmin").toLowerCase() === "true"
-            ? Admin()
-            : Supervisor()}
+          {Cookies.get("isAdmin") === "true" ? Admin() : Supervisor()}
         </div>
       </section>
 
-      {Cookies.get("isAdmin").toLowerCase() === "true"
-        ? AdminModals()
-        : SupervisorModals()}
+      {Cookies.get("isAdmin") === "true" ? AdminModals() : SupervisorModals()}
     </>
   );
 }
