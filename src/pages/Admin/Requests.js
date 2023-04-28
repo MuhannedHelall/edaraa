@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import AdminRequestTableItem from "./AdminRequestTableItem";
 import SuperRequestTableItem from "../Supervisor/SuperRequestTableItem";
-import Cookies from "js-cookie";
 import ResHandler from "../../components/ResHandler";
 
 function Requests() {
   const [requests, setRequests] = useState([]);
+  const [editRequestData, setEditRequestData] = useState({
+    id: null,
+    quantity: "",
+    isIncrease: "",
+  });
   useEffect(() => getAllRequests(), []);
 
   const getAllRequests = () => {
@@ -60,30 +65,28 @@ function Requests() {
   };
   const editRequest = (event) => {
     event.preventDefault();
-    fetch(
-      "http://localhost:8000/updateRequest/" +
-        document.getElementById("requestId").value,
-      {
-        method: "PUT",
-        body: JSON.stringify({
-          quantity: document.getElementById("editStock").value,
-          isIncrease: document.getElementById("editRequestQuantity").value,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }
-    )
+    fetch("http://localhost:8000/updateRequest/" + editRequestData.id, {
+      method: "PUT",
+      body: JSON.stringify({
+        quantity: editRequestData.quantity,
+        isIncrease: editRequestData.isIncrease,
+      }),
+      headers: { "Content-Type": "application/json" },
+    })
       .then((response) => response.json())
       .then((data) => {
         getAllRequests();
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-      })
-      .catch((error) => console.error(error));
+      });
   };
-  const editRequestModal = (id, requestedQuantity) => {
-    document.getElementById("requestId").value = id;
-    document.getElementById("editStock").value = requestedQuantity;
+  const editRequestModal = (request) => {
+    setEditRequestData({
+      id: request.id,
+      quantity: request.requestedQuantity,
+      isIncrease: request.isIncrease,
+    });
   };
 
   //View
@@ -133,6 +136,7 @@ function Requests() {
               <th>#</th>
               <th>Product Name</th>
               <th>Requested Quantity</th>
+              <th>Request Status</th>
               <th>Stock Quantity</th>
               <th>Action</th>
             </tr>
@@ -147,6 +151,7 @@ function Requests() {
                   productName={item.Product?.name}
                   requestedQuantity={item.quantity}
                   stock={item.Product?.stock}
+                  isIncrease={item.isIncrease}
                   isActive={item.isAcitve}
                   isAccepted={item.isAccepted}
                   deleteRequest={deleteRequest}
@@ -181,22 +186,39 @@ function Requests() {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <input type="hidden" id="requestId" />
                   <div className="mb-3">
-                    <label htmlFor="editStock" className="form-label">
+                    <label htmlFor="requestQuantity" className="form-label">
                       Request Quantity
                     </label>
                     <input
                       type="number"
                       className="form-control"
-                      id="editStock"
+                      id="requestQuantity"
+                      value={editRequestData.quantity}
+                      onChange={(e) =>
+                        setEditRequestData({
+                          ...editRequestData,
+                          quantity: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="editRequestQuantity" className="form-label">
+                    <label htmlFor="isIncrease" className="form-label">
                       Edit Request Quantity
                     </label>
-                    <select className="form-control" id="editRequestQuantity">
+                    <select
+                      className="form-control"
+                      id="isIncrease"
+                      value={editRequestData.isIncrease}
+                      onChange={(e) =>
+                        setEditRequestData({
+                          ...editRequestData,
+                          isIncrease: e.target.value,
+                        })
+                      }
+                    >
+                      <option>Choose Status:</option>
                       <option value={true}>Increase</option>
                       <option value={false}>Decrease</option>
                     </select>

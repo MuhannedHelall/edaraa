@@ -1,10 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 
 function Home() {
   const navigate = useNavigate();
-  if (Cookies.get("id")) navigate("/Dashboard");
+  useEffect(() => {
+    if (Cookies.get("id") !== undefined) navigate("/Dashboard");
+  }, [navigate]);
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  });
+
   const errMsgAlert = (message) => {
     const alert = document.getElementById("login-alert");
     alert.firstChild.innerText = message;
@@ -26,8 +33,8 @@ function Home() {
     fetch("http://localhost:8000/login", {
       method: "POST",
       body: JSON.stringify({
-        email: document.getElementById("login-email").value,
-        password: document.getElementById("login-password").value,
+        email: loginData.email,
+        password: loginData.password,
       }),
       headers: { "Content-Type": "application/json" },
     })
@@ -106,7 +113,7 @@ function Home() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => login(e)}>
+            <form onSubmit={login}>
               <div className="modal-header">
                 <h1 className="modal-title fs-5" id="LoginLabel">
                   Login Form
@@ -127,8 +134,10 @@ function Home() {
                     type="email"
                     className="form-control"
                     id="login-email"
-                    aria-describedby="emailHelp"
-                    name="email"
+                    value={loginData.email}
+                    onChange={(e) =>
+                      setLoginData({ ...loginData, email: e.target.value })
+                    }
                     required
                   />
                   <div id="emailHelp" className="form-text">
@@ -143,7 +152,10 @@ function Home() {
                     type="password"
                     className="form-control"
                     id="login-password"
-                    name="password"
+                    value={loginData.password}
+                    onChange={(e) =>
+                      setLoginData({ ...loginData, password: e.target.value })
+                    }
                   />
                 </div>
               </div>

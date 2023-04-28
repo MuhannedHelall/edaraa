@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import WarehouseTableItem from "./WarehouseTableItem";
 import ResHandler from "./../../components/ResHandler";
-import { useNavigate } from "react-router-dom";
 
 function Warehouses() {
   const navigate = useNavigate();
@@ -10,6 +10,17 @@ function Warehouses() {
 
   const [warehouses, setWarehouses] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
+  const [addWarehouseData, setAddWarehouseData] = useState({
+    name: "",
+    location: "",
+    supervisorId: "",
+  });
+  const [editWarehouseData, setEditWarehouseData] = useState({
+    id: "",
+    name: "",
+    location: "",
+    supervisorId: "",
+  });
   var [isSuperFoundBool, setIsSuperFoundBool] = useState(false);
   useEffect(() => {
     getAllWarehouses();
@@ -23,60 +34,50 @@ function Warehouses() {
   };
   const addWarehouse = (event) => {
     event.preventDefault();
-    let addName = document.getElementById("addWarehouseName");
-    let addLoc = document.getElementById("addWarehouseLocation");
-    let addSuper = document.getElementById("addWarehouseSuper");
     fetch("http://localhost:8000/addWarehouse", {
       method: "POST",
       body: JSON.stringify({
-        name: addName.value,
-        location: addLoc.value,
-        userID: addSuper.value,
+        name: addWarehouseData.name,
+        location: addWarehouseData.location,
+        userID: addWarehouseData.supervisorId,
       }),
       headers: { "Content-Type": "application/json" },
     })
       .then((response) => response.json())
       .then((data) => {
-        setSuperActive(addSuper.value);
+        setSuperActive(addWarehouseData.supervisorId);
         getAllWarehouses();
         getInActiveSupervisors();
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-        addName.value = "";
-        addLoc.value = "";
-        addSuper.value = "";
+        setAddWarehouseData({ name: "", location: "", supervisorId: "" });
       })
       .catch((error) => console.error(error));
   };
   const editWarehouse = (event) => {
     event.preventDefault();
-    fetch(
-      "http://localhost:8000/updateWarehouse/" +
-        document.getElementById("warehouseId").value,
-      {
-        method: "PUT",
-        body: JSON.stringify({
-          name: document.getElementById("editWarehouseName").value,
-          location: document.getElementById("editWarehouseLocation").value,
-          UserId: document.getElementById("editWarehouseSuper")?.value,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }
-    )
+    fetch("http://localhost:8000/updateWarehouse/" + editWarehouseData.id, {
+      method: "PUT",
+      body: JSON.stringify({
+        name: editWarehouseData.name,
+        location: editWarehouseData.location,
+        UserId: editWarehouseData.supervisorId,
+      }),
+      headers: { "Content-Type": "application/json" },
+    })
       .then((response) => response.json())
       .then((data) => {
         if (!isSuperFoundBool) {
-          setWarehouseActive(document.getElementById("warehouseId").value);
-          setSuperActive(document.getElementById("editWarehouseSuper").value);
+          setWarehouseActive(editWarehouseData.id);
+          setSuperActive(editWarehouseData.supervisorId);
         }
         getAllWarehouses();
         getInActiveSupervisors();
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-      })
-      .catch((error) => console.error(error));
+      });
   };
   const deleteWarehouse = (warehouse) => {
     fetch("http://localhost:8000/deleteWarehouse/" + warehouse.id, {
@@ -97,9 +98,12 @@ function Warehouses() {
 
   // DOM Manipulation
   const editWarehouseModal = (warehouse) => {
-    document.getElementById("warehouseId").value = warehouse.id;
-    document.getElementById("editWarehouseName").value = warehouse.name;
-    document.getElementById("editWarehouseLocation").value = warehouse.location;
+    setEditWarehouseData({
+      ...editWarehouseData,
+      id: warehouse.id,
+      name: warehouse.name,
+      location: warehouse.location,
+    });
   };
   const isSuperFound = (flag) => setIsSuperFoundBool(flag);
 
@@ -143,18 +147,28 @@ function Warehouses() {
       .then((data) => {
         getAllWarehouses();
         if (data.error) ResHandler(data.error, "danger");
-      })
-      .catch((error) => console.error(error));
+      });
   };
 
   //View
-  const showPassword = () => {
+  const showSupervisor = () => {
     return (
       <div className="mb-3">
         <label htmlFor="editWarehouseSuper" className="form-label">
           Supervisor
         </label>
-        <select className="form-select" id="editWarehouseSuper">
+        <select
+          className="form-select"
+          id="editWarehouseSuper"
+          value={editWarehouseData.supervisorId}
+          onChange={(e) =>
+            setEditWarehouseData({
+              ...editWarehouseData,
+              supervisorId: e.target.value,
+            })
+          }
+        >
+          <option>Select Supervisor:</option>
           {supervisors.map((supervisor) => {
             return (
               <option key={supervisor.id} value={supervisor.id}>
@@ -201,7 +215,7 @@ function Warehouses() {
                 key={warehouse.id}
                 id={warehouse.id}
                 index={index + 1}
-                name={warehouse?.name}
+                name={warehouse.name}
                 superName={warehouse.User?.name}
                 superId={warehouse.User?.id}
                 location={warehouse.location}
@@ -228,7 +242,7 @@ function Warehouses() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => addWarehouse(e)}>
+            <form onSubmit={addWarehouse}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Add Warehouse
@@ -249,6 +263,13 @@ function Warehouses() {
                     type="text"
                     className="form-control"
                     id="addWarehouseName"
+                    value={addWarehouseData.name}
+                    onChange={(e) =>
+                      setAddWarehouseData({
+                        ...addWarehouseData,
+                        name: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -259,13 +280,28 @@ function Warehouses() {
                     type="text"
                     className="form-control"
                     id="addWarehouseLocation"
+                    value={addWarehouseData.location}
+                    onChange={(e) =>
+                      setAddWarehouseData({
+                        ...addWarehouseData,
+                        location: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="addWarehouseSuper" className="form-label">
-                    Supervisor
-                  </label>
-                  <select className="form-select" id="addWarehouseSuper">
+                  <select
+                    className="form-select mt-4"
+                    id="addWarehouseSuper"
+                    value={addWarehouseData.supervisorId}
+                    onChange={(e) =>
+                      setAddWarehouseData({
+                        ...addWarehouseData,
+                        supervisorId: e.target.value,
+                      })
+                    }
+                  >
+                    <option>Selet Supervisor:</option>
                     {supervisors.map((supervisor) => {
                       return (
                         <option key={supervisor.id} value={supervisor.id}>
@@ -308,7 +344,7 @@ function Warehouses() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => editWarehouse(e)}>
+            <form onSubmit={editWarehouse}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Edit Warehouse
@@ -330,6 +366,13 @@ function Warehouses() {
                     type="text"
                     className="form-control"
                     id="editWarehouseName"
+                    value={editWarehouseData.name}
+                    onChange={(e) =>
+                      setEditWarehouseData({
+                        ...editWarehouseData,
+                        name: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -340,9 +383,16 @@ function Warehouses() {
                     type="text"
                     className="form-control"
                     id="editWarehouseLocation"
+                    value={editWarehouseData.location}
+                    onChange={(e) =>
+                      setEditWarehouseData({
+                        ...editWarehouseData,
+                        location: e.target.value,
+                      })
+                    }
                   />
                 </div>
-                {!isSuperFoundBool ? showPassword() : null}
+                {!isSuperFoundBool && showSupervisor()}
               </div>
               <div className="modal-footer">
                 <button

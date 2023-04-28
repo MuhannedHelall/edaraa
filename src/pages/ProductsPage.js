@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import AdminProductItem from "./Admin/AdminProductItem";
 import SupervisorProductItem from "./Supervisor/SupervisorProductItem";
 import ResHandler from "../components/ResHandler";
 
 function ProductsPage() {
+  const navigate = useNavigate();
   const params = useParams();
+  const [productData, setProductData] = useState({
+    id: "",
+    name: "",
+    description: "",
+    stock: "",
+    price: "",
+    image: null,
+  });
+  const [request, setRequest] = useState({
+    ProductID: "",
+    quantity: "",
+    isIncrease: "",
+  });
   const [products, setProducts] = useState([]);
-  const [image, setImage] = useState(null);
   // eslint-disable-next-line
   useEffect(() => getAllProducts(), []);
 
@@ -22,17 +35,12 @@ function ProductsPage() {
 
   const addProduct = (event) => {
     event.preventDefault();
-    let name = document.getElementById("addProductName");
-    let desc = document.getElementById("addDescription");
-    let stock = document.getElementById("addStock");
-    let price = document.getElementById("addPrice");
-    let img = document.getElementById("addImg");
     const formData = new FormData();
-    formData.append("name", name.value);
-    formData.append("description", desc.value);
-    formData.append("stock", stock.value);
-    formData.append("price", price.value);
-    formData.append("image", image);
+    formData.append("name", productData.name);
+    formData.append("description", productData.description);
+    formData.append("stock", productData.stock);
+    formData.append("price", productData.price);
+    formData.append("image", productData.image);
     fetch("http://localhost:8000/addNewProduct/" + params.id, {
       method: "POST",
       body: formData,
@@ -43,42 +51,28 @@ function ProductsPage() {
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-      })
-      .catch((error) => console.error(error));
-    name.value = "";
-    desc.value = "";
-    stock.value = "";
-    price.value = "";
-    img.value = "";
+      });
   };
 
   const editProduct = (event) => {
     event.preventDefault();
     const formData = new FormData();
-    formData.append("name", document.getElementById("editProductName").value);
-    formData.append(
-      "description",
-      document.getElementById("editDescription").value
-    );
-    formData.append("stock", document.getElementById("editStock").value);
-    formData.append("price", document.getElementById("editPrice").value);
-    formData.append("image", image);
-    fetch(
-      "http://localhost:8000/updateProduct/" +
-        document.getElementById("productId").value,
-      {
-        method: "POST",
-        body: formData,
-      }
-    )
+    formData.append("name", productData.name);
+    formData.append("description", productData.description);
+    formData.append("stock", productData.stock);
+    formData.append("price", productData.price);
+    formData.append("image", productData.image);
+    fetch("http://localhost:8000/updateProduct/" + productData.id, {
+      method: "POST",
+      body: formData,
+    })
       .then((response) => response.json())
       .then((data) => {
         getAllProducts();
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-      })
-      .catch((error) => console.error(error));
+      });
   };
 
   const deleteProduct = (product) => {
@@ -100,12 +94,12 @@ function ProductsPage() {
     event.preventDefault();
     const data = {
       SupervisorID: Cookies.get("id"),
-      ProductID: document.getElementById("superRequestMaking").value,
-      quantity: document.getElementById("stockRequest").value,
-      isIncrease: document.getElementById("isIncrease").value,
+      ProductID: request.ProductID,
+      quantity: request.quantity,
+      isIncrease: request.isIncrease,
     };
     var formBody = [];
-    for (var property in data) {
+    for (var property in request) {
       var encodedKey = encodeURIComponent(property);
       var encodedValue = encodeURIComponent(data[property]);
       formBody.push(encodedKey + "=" + encodedValue);
@@ -123,21 +117,22 @@ function ProductsPage() {
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-      })
-      .catch((error) => console.error(error));
+      });
   };
 
   //View
   const Admin = () => {
     const editProductModal = (product) => {
-      document.getElementById("productId").value = product.id;
-      document.getElementById("editProductName").value = product.name;
-      document.getElementById("editDescription").value = product.description;
-      document.getElementById("editStock").value = product.stock;
-      document.getElementById("editPrice").value = product.price;
+      setProductData({
+        ...productData,
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        stock: product.stock,
+        price: product.price,
+      });
     };
     return products.map((product) => {
-      console.log(product);
       return (
         <AdminProductItem
           key={product.id}
@@ -154,8 +149,10 @@ function ProductsPage() {
     });
   };
   const Supervisor = () => {
+    if (Cookies.get("warehouseId") !== params.id) navigate("../NotFound");
+
     const getRequestData = (requestId) => {
-      document.getElementById("superRequestMaking").value = requestId;
+      setRequest({ ...request, ProductID: requestId });
     };
 
     return products.map((product) => {
@@ -173,9 +170,6 @@ function ProductsPage() {
     });
   };
   const AdminModals = () => {
-    const handleFileChange = (event) => {
-      setImage(event.target.files[0]);
-    };
     return (
       <>
         <div
@@ -210,6 +204,10 @@ function ProductsPage() {
                       type="text"
                       className="form-control"
                       id="addProductName"
+                      value={productData.name}
+                      onChange={(e) =>
+                        setProductData({ ...productData, name: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -217,13 +215,19 @@ function ProductsPage() {
                     <label htmlFor="addDescription" className="form-label">
                       Description
                     </label>
-                    <input
-                      type="text-area"
+                    <textarea
                       className="form-control"
                       id="addDescription"
-                      aria-describedby="emailHelp"
+                      rows={3}
+                      value={productData.description}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          description: e.target.value,
+                        })
+                      }
                       required
-                    />
+                    ></textarea>
                   </div>
                   <div className="mb-3">
                     <label htmlFor="addStock" className="form-label">
@@ -233,6 +237,13 @@ function ProductsPage() {
                       type="number"
                       className="form-control"
                       id="addStock"
+                      value={productData.stock}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          stock: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -244,15 +255,27 @@ function ProductsPage() {
                       type="number"
                       className="form-control"
                       id="addPrice"
+                      value={productData.price}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          price: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
-                  <div className="input-group mb-3">
+                  <div className="mb-3">
                     <input
                       type="file"
                       className="form-control"
                       id="addImg"
-                      onChange={handleFileChange}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          image: e.target.files[0],
+                        })
+                      }
                       required
                     />
                   </div>
@@ -302,7 +325,6 @@ function ProductsPage() {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <input type="hidden" id="productId" />
                   <div className="mb-3">
                     <label htmlFor="editProductName" className="form-label">
                       Name
@@ -311,18 +333,28 @@ function ProductsPage() {
                       type="text"
                       className="form-control"
                       id="editProductName"
+                      value={productData.name}
+                      onChange={(e) =>
+                        setProductData({ ...productData, name: e.target.value })
+                      }
                     />
                   </div>
                   <div className="mb-3">
                     <label htmlFor="editDescription" className="form-label">
                       Description
                     </label>
-                    <input
-                      type="text-area"
+                    <textarea
                       className="form-control"
                       id="editDescription"
-                      aria-describedby="emailHelp"
-                    />
+                      rows={3}
+                      value={productData.description}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          description: e.target.value,
+                        })
+                      }
+                    ></textarea>
                   </div>
                   <div className="mb-3">
                     <label htmlFor="editStock" className="form-label">
@@ -332,6 +364,13 @@ function ProductsPage() {
                       type="number"
                       className="form-control"
                       id="editStock"
+                      value={productData.stock}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          stock: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="mb-3">
@@ -342,14 +381,26 @@ function ProductsPage() {
                       type="number"
                       className="form-control"
                       id="editPrice"
+                      value={productData.price}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          price: e.target.value,
+                        })
+                      }
                     />
                   </div>
-                  <div className="input-group mb-3">
+                  <div className="mb-3">
                     <input
                       type="file"
                       className="form-control"
                       id="editFile"
-                      onChange={handleFileChange}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          image: e.target.files[0],
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -389,7 +440,7 @@ function ProductsPage() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => makeRequest(e)}>
+            <form onSubmit={makeRequest}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Make a Request
@@ -402,19 +453,31 @@ function ProductsPage() {
                 ></button>
               </div>
               <div className="modal-body">
-                <input type="hidden" id="superRequestMaking" />
                 <div className="mb-3">
                   <label htmlFor="stockRequest" className="form-label">
-                    Stock Quantity
+                    Request Quantity
                   </label>
                   <input
                     type="number"
                     className="form-control"
                     id="stockRequest"
+                    value={request.quantity}
+                    onChange={(e) =>
+                      setRequest({ ...request, quantity: e.target.value })
+                    }
+                    required
                   />
                 </div>
                 <div className="mb-3">
-                  <select className="form-control" id="isIncrease">
+                  <select
+                    className="form-control"
+                    id="isIncrease"
+                    value={request.isIncrease}
+                    onChange={(e) =>
+                      setRequest({ ...request, isIncrease: e.target.value })
+                    }
+                    required
+                  >
                     <option value={true}>Increase</option>
                     <option value={false}>Decrease</option>
                   </select>
@@ -448,6 +511,17 @@ function ProductsPage() {
         className="btn btn-sm btn-outline-dark"
         data-bs-toggle="modal"
         data-bs-target="#addProduct"
+        onClick={() =>
+          setProductData({
+            ...productData,
+            id: "",
+            name: "",
+            description: "",
+            stock: "",
+            price: "",
+            image: null,
+          })
+        }
       >
         <i className="bi bi-bag-plus-fill fs-4"></i>
       </button>

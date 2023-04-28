@@ -1,5 +1,4 @@
 import React from "react";
-import img from "../../assets/imgs/1.jpg";
 
 function SupervisorProductItem(props) {
   return (

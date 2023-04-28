@@ -9,6 +9,13 @@ import "../assets/styles/MainPage.css";
 function MainPage() {
   const navigate = useNavigate();
   const [warehouses, setWarehouses] = useState([]);
+  const [user, setUser] = useState({
+    id: "",
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
   useEffect(() => {
     if (Cookies.get("id") === undefined || Cookies.get("id") === null)
       navigate("/");
@@ -17,7 +24,7 @@ function MainPage() {
     return () => {
       document.removeEventListener("click", handleClick);
     };
-  }, []);
+  }, [navigate]);
 
   const getAllWarehouses = () => {
     fetch("http://localhost:8000/getWarehouses")
@@ -26,40 +33,37 @@ function MainPage() {
   };
   const updateUser = (event) => {
     event.preventDefault();
-    const user = {
-      name: document.getElementById("editAdminName").value,
-      email: document.getElementById("editAdminEmail").value,
-      phone: document.getElementById("editAdminPhone").value,
-      password: document.getElementById("editAdminPassword").value,
-    };
-    fetch(
-      "http://localhost:8000/updateSupervisor/" +
-        document.getElementById("userId").value,
-      {
-        method: "POST",
-        body: JSON.stringify(user),
-        headers: { "Content-Type": "application/json" },
-      }
-    )
+    fetch("http://localhost:8000/updateSupervisor/" + user.id, {
+      method: "POST",
+      body: JSON.stringify({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        password: user.password,
+      }),
+      headers: { "Content-Type": "application/json" },
+    })
       .then((response) => response.json())
       .then((data) => {
         data.error
           ? ResHandler(data.error, "danger")
           : saveCookie(data.message, user);
       })
-      .catch((error) => console.error(error));
   };
   const saveCookie = (msg, user) => {
-    if (user.name) Cookies.set("name", user.name, { expires: 7 });
-    if (user.email) Cookies.set("email", user.email, { expires: 7 });
-    if (user.phone) Cookies.set("phone", user.phone, { expires: 7 });
+    if (user.name) Cookies.set("name", user.name);
+    if (user.email) Cookies.set("email", user.email);
+    if (user.phone) Cookies.set("phone", user.phone);
     ResHandler(msg);
   };
   const editUserModal = () => {
-    document.getElementById("userId").value = Cookies.get("id");
-    document.getElementById("editAdminName").value = Cookies.get("name");
-    document.getElementById("editAdminEmail").value = Cookies.get("email");
-    document.getElementById("editAdminPhone").value = Cookies.get("phone");
+    setUser({
+      ...user,
+      id: Cookies.get("id"),
+      name: Cookies.get("name"),
+      email: Cookies.get("email"),
+      phone: Cookies.get("phone"),
+    });
   };
   const handleClick = () => {
     document.getElementById("liveAlertPlaceholder").innerHTML = "";
@@ -113,7 +117,7 @@ function MainPage() {
     return (
       <li className="mb-1">
         <Link
-          to={"/warehouses/" + 1}
+          to={"/Warehouses/" + Cookies.get("warehouseId")}
           className="btn btn-toggle d-inline-flex align-items-center rounded border-0"
         >
           <i className="bi bi-bag-heart me-2 fs-5"></i>
@@ -250,7 +254,7 @@ function MainPage() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => updateUser(e)}>
+            <form onSubmit={updateUser}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   {Cookies.get("isAdmin") === "true"
@@ -265,7 +269,6 @@ function MainPage() {
                 ></button>
               </div>
               <div className="modal-body">
-                <input id="userId" name="userId" type="hidden" />
                 <div className="mb-3">
                   <label htmlFor="editAdminName" className="form-label">
                     Name
@@ -274,7 +277,8 @@ function MainPage() {
                     type="text"
                     className="form-control"
                     id="editAdminName"
-                    name="name"
+                    value={user.name}
+                    onChange={(e) => setUser({ ...user, name: e.target.value })}
                   />
                 </div>
                 <div className="mb-3">
@@ -285,7 +289,10 @@ function MainPage() {
                     type="email"
                     className="form-control"
                     id="editAdminEmail"
-                    aria-describedby="emailHelp"
+                    value={user.email}
+                    onChange={(e) =>
+                      setUser({ ...user, email: e.target.value })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -296,6 +303,10 @@ function MainPage() {
                     type="text"
                     className="form-control"
                     id="editAdminPhone"
+                    value={user.phone}
+                    onChange={(e) =>
+                      setUser({ ...user, phone: e.target.value })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -321,6 +332,10 @@ function MainPage() {
                         type="password"
                         className="form-control"
                         id="editAdminPassword"
+                        value={user.password}
+                        onChange={(e) =>
+                          setUser({ ...user, password: e.target.value })
+                        }
                       />
                     </div>
                   </div>

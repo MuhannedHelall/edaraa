@@ -24,23 +24,23 @@ export const router = createBrowserRouter([
         element: <MainPage />,
         children: [
           {
-            path: "/dashboard",
+            path: "/Dashboard",
             element: <Dashboard />,
           },
           {
-            path: "/supervisors",
+            path: "/Supervisors",
             element: <Supervisors />,
           },
           {
-            path: "/warehouses",
+            path: "/Warehouses",
             element: <Warehouses />,
           },
           {
-            path: "/warehouses/:id",
+            path: "/Warehouses/:id",
             element: <ProductsPage />,
           },
           {
-            path: "/requests",
+            path: "/Requests",
             element: <Requests />,
           },
           {

@@ -9,6 +9,19 @@ function Supervisors() {
   if (Cookies.get("isAdmin") !== "true") navigate("/NotFound");
 
   const [users, setUsers] = useState([]);
+  const [addSuperData, setAddSuperData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+  });
+  const [editSuperData, setEditSuperData] = useState({
+    id: "",
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+  });
   useEffect(() => getAllSupervisors(), []);
 
   const getAllSupervisors = () => {
@@ -21,10 +34,10 @@ function Supervisors() {
     fetch("http://localhost:8000/addSupervisor", {
       method: "POST",
       body: JSON.stringify({
-        name: document.getElementById("addSuperName").value,
-        email: document.getElementById("addSuperEmail").value,
-        password: document.getElementById("addSuperPassword").value,
-        phone: document.getElementById("addSuperPhone").value,
+        name: addSuperData.name,
+        email: addSuperData.email,
+        password: addSuperData.password,
+        phone: addSuperData.phone,
       }),
       headers: { "Content-Type": "application/json" },
     })
@@ -34,37 +47,28 @@ function Supervisors() {
         data.errors
           ? data.errors.map((err) => ResHandler(err, "danger"))
           : ResHandler(data.message);
-        document.getElementById("addSuperName").value = "";
-        document.getElementById("addSuperEmail").value = "";
-        document.getElementById("addSuperPassword").value = "";
-        document.getElementById("addSuperPhone").value = "";
-      })
-      .catch((error) => console.error(error));
+        setAddSuperData({ name: "", email: "", password: "", phone: "" });
+      });
   };
   const updateSupervisor = (event) => {
     event.preventDefault();
-    fetch(
-      "http://localhost:8000/updateSupervisor/" +
-        document.getElementById("superId").value,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          name: document.getElementById("editSuperName").value,
-          email: document.getElementById("editSuperEmail").value,
-          phone: document.getElementById("editSuperPhone").value,
-          password: document.getElementById("editSuperPassword").value,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }
-    )
+    fetch("http://localhost:8000/updateSupervisor/" + editSuperData.id, {
+      method: "POST",
+      body: JSON.stringify({
+        name: editSuperData.name,
+        email: editSuperData.email,
+        phone: editSuperData.phone,
+        password: editSuperData.password,
+      }),
+      headers: { "Content-Type": "application/json" },
+    })
       .then((response) => response.json())
       .then((data) => {
         getAllSupervisors();
         data.error
           ? ResHandler(data.error, "danger")
           : ResHandler(data.message);
-      })
-      .catch((error) => console.error(error));
+      });
   };
   const deleteSupervisor = (supervisor) => {
     fetch("http://localhost:8000/deleteSupervisor/" + supervisor.id, {
@@ -84,10 +88,13 @@ function Supervisors() {
 
   //DOM Manipulation
   const editSupervisorModal = (supervisor) => {
-    document.getElementById("superId").value = supervisor.id;
-    document.getElementById("editSuperName").value = supervisor.name;
-    document.getElementById("editSuperEmail").value = supervisor.email;
-    document.getElementById("editSuperPhone").value = supervisor.phone;
+    setEditSuperData({
+      ...editSuperData,
+      id: supervisor.id,
+      name: supervisor.name,
+      email: supervisor.email,
+      phone: supervisor.phone,
+    });
   };
 
   //
@@ -165,7 +172,7 @@ function Supervisors() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => addSupervisor(e)}>
+            <form onSubmit={addSupervisor}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Add Supervisor
@@ -187,6 +194,10 @@ function Supervisors() {
                     className="form-control"
                     id="addSuperName"
                     name="name"
+                    value={addSuperData.name}
+                    onChange={(e) =>
+                      setAddSuperData({ ...addSuperData, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -197,8 +208,14 @@ function Supervisors() {
                     type="email"
                     className="form-control"
                     id="addSuperEmail"
-                    aria-describedby="emailHelp"
                     name="email"
+                    value={addSuperData.email}
+                    onChange={(e) =>
+                      setAddSuperData({
+                        ...addSuperData,
+                        email: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -210,6 +227,13 @@ function Supervisors() {
                     className="form-control"
                     id="addSuperPassword"
                     name="password"
+                    value={addSuperData.password}
+                    onChange={(e) =>
+                      setAddSuperData({
+                        ...addSuperData,
+                        password: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -221,6 +245,13 @@ function Supervisors() {
                     className="form-control"
                     id="addSuperPhone"
                     name="phone"
+                    value={addSuperData.phone}
+                    onChange={(e) =>
+                      setAddSuperData({
+                        ...addSuperData,
+                        phone: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -256,7 +287,7 @@ function Supervisors() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <form onSubmit={(e) => updateSupervisor(e)}>
+            <form onSubmit={updateSupervisor}>
               <div className="modal-header">
                 <h5 className="modal-title" id="exampleModalLabel">
                   Edit Supervisor
@@ -269,7 +300,6 @@ function Supervisors() {
                 ></button>
               </div>
               <div className="modal-body">
-                <input type="hidden" id="superId" />
                 <div className="mb-3">
                   <label htmlFor="editSuperName" className="form-label">
                     Name
@@ -278,6 +308,13 @@ function Supervisors() {
                     type="text"
                     className="form-control"
                     id="editSuperName"
+                    value={editSuperData.name}
+                    onChange={(e) =>
+                      setEditSuperData({
+                        ...editSuperData,
+                        name: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
@@ -289,6 +326,13 @@ function Supervisors() {
                     type="email"
                     className="form-control"
                     id="editSuperEmail"
+                    value={editSuperData.email}
+                    onChange={(e) =>
+                      setEditSuperData({
+                        ...editSuperData,
+                        email: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
@@ -300,6 +344,13 @@ function Supervisors() {
                     type="text"
                     className="form-control"
                     id="editSuperPhone"
+                    value={editSuperData.phone}
+                    onChange={(e) =>
+                      setEditSuperData({
+                        ...editSuperData,
+                        phone: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
@@ -326,6 +377,13 @@ function Supervisors() {
                         type="password"
                         className="form-control"
                         id="editSuperPassword"
+                        value={editSuperData.password}
+                        onChange={(e) =>
+                          setEditSuperData({
+                            ...editSuperData,
+                            password: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>

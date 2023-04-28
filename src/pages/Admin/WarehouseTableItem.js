@@ -1,7 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function WarehouseTableItem(props) {
+  const navigate = useNavigate();
   const confirmDeletion = () => {
     document.getElementById("actionData" + props.id).classList.add("d-none");
     document
@@ -24,10 +25,12 @@ function WarehouseTableItem(props) {
         id={"actionData" + props.id}
         className="d-flex justify-content-evenly"
       >
-        <button type="button" className="btn btn-sm btn-outline-primary">
-          <Link to={"/warehouses/" + props.id}>
-            <i className="bi bi-eye fs-6"></i>
-          </Link>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-primary"
+          onClick={() => navigate("/warehouses/" + props.id)}
+        >
+          <i className="bi bi-eye fs-6"></i>
         </button>
         <button
           type="button"

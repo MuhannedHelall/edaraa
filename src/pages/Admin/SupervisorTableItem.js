@@ -5,8 +5,8 @@ function SupervisorTableItem(props) {
   const link = () => {
     return (
       <Link
-        to={"/warehouses/" + props.warehouseId}
-        className="text-decoration-none link-dark"
+        to={"/Warehouses/" + props.warehouseId}
+        className="link-dark"
       >
         {props.warehouseName}
       </Link>

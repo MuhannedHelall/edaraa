@@ -24,7 +24,9 @@ function SuperRequestTableItem(props) {
               className="btn btn-sm btn-outline-secondary col-5"
               data-bs-toggle="modal"
               data-bs-target="#editRequest"
-              onClick={props.editRequestModal(props.id, props.requestedQuantity)}
+              onClick={() =>
+                props.editRequestModal(props)
+              }
             >
               <i className="bi bi-pencil fs-6"></i>
             </button>
@@ -68,6 +70,11 @@ function SuperRequestTableItem(props) {
       <th>{props.index + 1}</th>
       <th>{props.productName}</th>
       <td>{props.requestedQuantity}</td>
+      {props.isIncrease ? (
+        <td className="text-success fw-bolder">Increase</td>
+      ) : (
+        <td className="text-danger fw-bolder">Decrease</td>
+      )}
       <td>{props.stock}</td>
       {handleAction()}
     </tr>
