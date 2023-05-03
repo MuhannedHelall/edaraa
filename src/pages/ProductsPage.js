@@ -99,7 +99,7 @@ function ProductsPage() {
       isIncrease: request.isIncrease,
     };
     var formBody = [];
-    for (var property in request) {
+    for (var property in data) {
       var encodedKey = encodeURIComponent(property);
       var encodedValue = encodeURIComponent(data[property]);
       formBody.push(encodedKey + "=" + encodedValue);
@@ -133,6 +133,7 @@ function ProductsPage() {
       });
     };
     return products.map((product) => {
+      console.log(product);
       return (
         <AdminProductItem
           key={product.id}
@@ -478,6 +479,7 @@ function ProductsPage() {
                     }
                     required
                   >
+                    <option>Choose the status of your request:</option>
                     <option value={true}>Increase</option>
                     <option value={false}>Decrease</option>
                   </select>

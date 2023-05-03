@@ -105,8 +105,15 @@ function AdminRequestTableItem(props) {
   };
   return (
     <tr>
-      <th>{props.index + 1}</th>
-      <th>{props.productName}</th>
+      <td>{props.index + 1}</td>
+      <td>
+        <img
+          style={{ width: "80px", height: "33px" }}
+          src={props.productImage}
+          alt="..."
+        />
+      </td>
+      <td className="fw-bold">{props.productName}</td>
       <td>{props.requestedQuantity}</td>
       <td>{props.stock}</td>
       {handleStatus()}

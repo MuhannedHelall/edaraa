@@ -96,12 +96,13 @@ function Requests() {
         <thead className="table-dark">
           <tr>
             <th>#</th>
+            <th>Image</th>
             <th>Product Name</th>
             <th>Requested Quantity</th>
             <th>Stock Quantity</th>
             <th>Request Status</th>
             <th>Supervisor Name</th>
-            <th>Action</th>
+            <th className="col-2">Action</th>
           </tr>
         </thead>
         <tbody className="table-group-divider">
@@ -111,6 +112,7 @@ function Requests() {
                 key={request.id}
                 index={index}
                 id={request.id}
+                productImage={request.Product?.image}
                 productName={request.Product?.name}
                 superName={request.User?.name}
                 requestedQuantity={request.quantity}
@@ -134,11 +136,12 @@ function Requests() {
           <thead className="table-dark">
             <tr>
               <th>#</th>
+              <th>Image</th>
               <th>Product Name</th>
               <th>Requested Quantity</th>
               <th>Request Status</th>
               <th>Stock Quantity</th>
-              <th>Action</th>
+              <th className="col-2">Action</th>
             </tr>
           </thead>
           <tbody className="table-group-divider">
@@ -148,6 +151,7 @@ function Requests() {
                   key={item.id}
                   index={index}
                   id={item.id}
+                  productImage={item.Product?.image}
                   productName={item.Product?.name}
                   requestedQuantity={item.quantity}
                   stock={item.Product?.stock}
@@ -250,6 +254,7 @@ function Requests() {
 
   return (
     <>
+      {/* {requests.length <= 0 && ResHandler("There are no requests in the meantime!","danger")} */}
       <div className="d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap py-3 mb-2 border-bottom">
         <h1 className="h2">
           <i className="bi bi-bell mx-2"></i>
